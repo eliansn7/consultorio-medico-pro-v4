@@ -1,4 +1,4 @@
-const CACHE = "consultorio-pro-v4.5";
+const CACHE = "consultorio-pro-v5";
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(["/", "/index.html", "/manifest.json"])));
 });
