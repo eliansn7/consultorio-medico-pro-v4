@@ -1,0 +1,3478 @@
+<!doctype html>
+<html lang="es" data-theme="teal">
+<head>
+<link rel="manifest" href="manifest.json">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Consultorio Médico Pro v4 · Expediente Clínico, Recetario Inteligente y Calculadoras</title>
+<script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js");</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
+<style>
+:root, [data-theme="teal"] {
+  --bg: #f3f7f8;
+  --surface: #ffffff;
+  --surface2: #eef5f6;
+  --surface3: #e2eff1;
+  --ink: #0f172a;
+  --muted: #475569;
+  --line: #cbd5e1;
+  --accent: #0f766e;
+  --accent-hover: #115e59;
+  --accent-dark: #0f766e;
+  --accent-soft: #ccfbf1;
+  --accent-glow: rgba(15, 118, 110, 0.14);
+  --hero-grad: linear-gradient(135deg, #0f766e 0%, #0e7490 55%, #1e3a8a 100%);
+  --ok: #15803d;
+  --ok-bg: #dcfce7;
+  --warn: #b45309;
+  --warn-bg: #fef3c7;
+  --danger: #b91c1c;
+  --danger-bg: #fee2e2;
+  --radius: 18px;
+  --shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.06), 0 4px 10px -3px rgba(15, 23, 42, 0.04);
+}
+
+[data-theme="navy"] {
+  --bg: #f4f6fb;
+  --surface: #ffffff;
+  --surface2: #eef2fa;
+  --surface3: #e0e7f7;
+  --ink: #0f172a;
+  --muted: #475569;
+  --line: #cbd5e1;
+  --accent: #1d4ed8;
+  --accent-hover: #1e40af;
+  --accent-dark: #1e40af;
+  --accent-soft: #dbeafe;
+  --accent-glow: rgba(29, 78, 216, 0.14);
+  --hero-grad: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 55%, #0284c7 100%);
+}
+
+[data-theme="berry"] {
+  --bg: #fff6f8;
+  --surface: #ffffff;
+  --surface2: #fdf0f3;
+  --surface3: #fae2e8;
+  --ink: #2b1a20;
+  --muted: #7a5a64;
+  --line: #f0d6dd;
+  --accent: #c2255c;
+  --accent-hover: #9d174d;
+  --accent-dark: #9d174d;
+  --accent-soft: #fce7ef;
+  --accent-glow: rgba(194, 37, 92, 0.14);
+  --hero-grad: linear-gradient(135deg, #9d174d 0%, #c2255c 55%, #be185d 100%);
+}
+
+[data-mode="dark"] {
+  --bg: #0b1116;
+  --surface: #131c24;
+  --surface2: #1a2631;
+  --surface3: #22313f;
+  --ink: #f1f5f9;
+  --muted: #94a3b8;
+  --line: #293846;
+  --accent-soft: rgba(20, 184, 166, 0.16);
+  --accent-dark: #2dd4bf;
+  --ok-bg: rgba(21, 128, 61, 0.22);
+  --warn-bg: rgba(180, 83, 9, 0.24);
+  --danger-bg: rgba(185, 28, 28, 0.24);
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+[data-mode="dark"][data-theme="navy"] { --accent-dark: #60a5fa; --accent-soft: rgba(59, 130, 246, 0.18); }
+[data-mode="dark"][data-theme="berry"] { --accent-dark: #f472a0; --accent-soft: rgba(244, 114, 160, 0.18); }
+
+/* Modo Pase de Visita Compacto */
+body.ward-mode .hero { display: none; }
+body.ward-mode .wrap { max-width: 960px; padding-top: 10px; }
+body.ward-mode .menu button { padding: 9px 8px; }
+body.ward-mode .menu button span.desc { display: none; }
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.55;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+h1, h2, h3, h4 { line-height: 1.2; margin: 0; }
+h1 { font-family: 'Fraunces', Georgia, serif; font-size: clamp(25px, 4.2vw, 36px); letter-spacing: -0.02em; }
+h2 { font-size: 21px; font-weight: 800; letter-spacing: -0.01em; }
+h3 { font-size: 16px; font-weight: 700; }
+a { color: var(--accent-dark); }
+
+.wrap { max-width: 1220px; margin: 0 auto; padding: 16px 16px 72px; }
+
+/* Top Utility Bar */
+.utility-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+  padding: 10px 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+}
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ok);
+  background: var(--ok-bg);
+  padding: 5px 12px;
+  border-radius: 999px;
+}
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.25);
+}
+.utility-actions { display: flex; gap: 7px; flex-wrap: wrap; align-items: center; }
+
+/* Hero Banner */
+.hero {
+  background: var(--hero-grad);
+  color: #ffffff;
+  border-radius: 24px;
+  padding: 24px 28px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  align-items: center;
+  box-shadow: 0 18px 36px -10px rgba(15, 118, 110, 0.32);
+  position: relative;
+  overflow: hidden;
+}
+@media(min-width: 840px) { .hero { grid-template-columns: 1.5fr 0.8fr; } }
+.hero::after {
+  content: "";
+  position: absolute;
+  right: -60px;
+  top: -60px;
+  width: 260px;
+  height: 260px;
+  background: radial-gradient(circle, rgba(255,255,255,0.14) 0%, transparent 70%);
+  pointer-events: none;
+}
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  padding: 5px 13px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+.hero p.lead {
+  margin: 8px 0 16px;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 15px;
+  max-width: 620px;
+}
+.hero-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 9px;
+  max-width: 560px;
+}
+@media(max-width: 540px) { .hero-stats { grid-template-columns: repeat(2, 1fr); } }
+.stat-box {
+  background: rgba(255, 255, 255, 0.13);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 14px;
+  padding: 9px 11px;
+}
+.stat-box strong { display: block; font-size: 19px; font-weight: 800; line-height: 1.1; }
+.stat-box span { font-size: 11px; opacity: 0.9; font-weight: 600; }
+.hero-art { display: flex; justify-content: center; align-items: center; }
+.hero-art svg { width: 100%; max-width: 240px; height: auto; filter: drop-shadow(0 12px 20px rgba(0,0,0,0.2)); }
+
+/* Navigation Grid */
+.menu {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin: 18px 0;
+}
+@media(min-width: 780px) { .menu { grid-template-columns: repeat(7, 1fr); } }
+.menu button {
+  border: 1.5px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  border-radius: var(--radius);
+  padding: 13px 11px;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: all 0.18s ease;
+}
+.menu button:hover { transform: translateY(-2px); border-color: var(--accent); }
+.menu button .ico-wrap {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--surface2);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.menu button strong { font-size: 12.8px; font-weight: 800; letter-spacing: 0.01em; }
+.menu button span.desc { font-size: 11.5px; color: var(--muted); font-weight: 500; line-height: 1.3; }
+.menu button.active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+.menu button.active .ico-wrap { background: var(--accent); color: #ffffff; }
+
+/* Sub-tabs inside panels */
+.subtabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+.subtab-btn {
+  border: 1.5px solid var(--line);
+  background: var(--surface2);
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 7px 15px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.subtab-btn.active {
+  background: var(--accent);
+  color: #ffffff;
+  border-color: var(--accent);
+}
+.subview { display: none; }
+.subview.active { display: block; animation: fadeIn 0.18s ease; }
+
+/* Panels */
+section.panel {
+  display: none;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  padding: 24px;
+  box-shadow: var(--shadow);
+  animation: fadeIn 0.2s ease;
+}
+section.panel.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+.panel-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+.panel-head p { color: var(--muted); margin: 5px 0 0; font-size: 14px; max-width: 700px; }
+
+/* Grids & Form Controls */
+.grid { display: grid; gap: 14px; }
+.grid2 { grid-template-columns: 1fr; }
+.grid3 { grid-template-columns: 1fr; }
+.grid4 { grid-template-columns: 1fr 1fr; }
+@media(min-width: 720px) {
+  .grid2 { grid-template-columns: 1fr 1fr; }
+  .grid3 { grid-template-columns: repeat(3, 1fr); }
+  .grid4 { grid-template-columns: repeat(4, 1fr); }
+}
+
+label { font-weight: 700; font-size: 12.5px; display: block; margin-bottom: 5px; color: var(--ink); }
+input, select, textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  min-height: 41px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+textarea { min-height: 80px; resize: vertical; }
+.field { margin-bottom: 10px; }
+
+/* Buttons */
+.btn {
+  border: 0;
+  border-radius: 12px;
+  padding: 9px 15px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  justify-content: center;
+  text-decoration: none;
+  font-size: 13.5px;
+  min-height: 40px;
+  transition: all 0.15s ease;
+}
+.btn-sm { padding: 6px 11px; font-size: 12px; min-height: 32px; border-radius: 9px; }
+.btn-primary { background: var(--accent); color: #ffffff; }
+.btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); }
+.btn-secondary { background: var(--surface2); color: var(--ink); border: 1px solid var(--line); }
+.btn-secondary:hover { background: var(--surface3); }
+.btn-ghost { background: transparent; color: var(--accent-dark); border: 1px solid var(--line); }
+.btn-ghost:hover { background: var(--surface2); }
+.btn-wa { background: #16a34a; color: #ffffff; }
+.btn-wa:hover { background: #15803d; }
+.btn-danger { background: var(--danger-bg); color: var(--danger); border: 1px solid rgba(185, 28, 28, 0.25); }
+.actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+
+/* Cards, Results & Alerts */
+.card {
+  background: var(--surface2);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 16px;
+}
+.result {
+  background: var(--accent-soft);
+  border: 1px solid var(--accent);
+  color: var(--ink);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-weight: 700;
+  font-size: 13.5px;
+  margin-top: 10px;
+  line-height: 1.45;
+}
+.note {
+  background: var(--warn-bg);
+  border: 1px solid rgba(180, 83, 9, 0.3);
+  color: var(--warn);
+  border-radius: 12px;
+  padding: 11px 14px;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+.allergy-banner {
+  background: var(--danger-bg);
+  border: 1.5px solid rgba(185, 28, 28, 0.45);
+  color: var(--danger);
+  border-radius: 12px;
+  padding: 11px 14px;
+  font-size: 13.5px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  display: none;
+}
+.allergy-banner.visible { display: block; animation: fadeIn 0.2s ease; }
+.interaction-banner {
+  background: var(--warn-bg);
+  border: 1.5px solid rgba(180, 83, 9, 0.45);
+  color: var(--warn);
+  border-radius: 12px;
+  padding: 11px 14px;
+  font-size: 13.5px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  display: none;
+}
+.interaction-banner.visible { display: block; animation: fadeIn 0.2s ease; }
+
+/* Rx Medication Builder */
+.rx-item-row {
+  background: var(--surface2);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 10px;
+  position: relative;
+}
+.rx-item-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.chip-bar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+.chip {
+  background: var(--surface2);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 5px 11px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.14s ease;
+}
+.chip:hover { border-color: var(--accent); background: var(--accent-soft); }
+.chip-kit {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent-dark);
+  font-weight: 700;
+}
+
+/* Tables */
+.table-wrap { overflow: auto; border: 1px solid var(--line); border-radius: 14px; margin-top: 12px; }
+table { border-collapse: collapse; width: 100%; min-width: 820px; font-size: 13.5px; }
+th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { background: var(--surface2); font-size: 11.5px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
+tr:hover td { background: var(--surface2); }
+
+/* Patient List & Timeline */
+.list { display: grid; gap: 12px; margin-top: 16px; }
+.patient {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 16px;
+  background: var(--surface);
+  transition: border-color 0.15s ease;
+}
+.patient:hover { border-color: var(--accent); }
+.patient header { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: center; }
+.pill {
+  font-size: 11.5px;
+  font-weight: 700;
+  background: var(--accent-soft);
+  color: var(--accent-dark);
+  padding: 4px 10px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.timeline {
+  border-left: 2.5px solid var(--accent);
+  margin-left: 10px;
+  padding-left: 18px;
+  display: grid;
+  gap: 14px;
+}
+.tl-item {
+  position: relative;
+  background: var(--surface2);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px;
+}
+.tl-item::before {
+  content: "";
+  position: absolute;
+  left: -25px;
+  top: 18px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--surface);
+}
+
+/* Calculators & Checks */
+.calc-grid { display: grid; gap: 16px; }
+@media(min-width: 840px) { .calc-grid { grid-template-columns: 1fr 1fr; } }
+.checks { display: grid; gap: 7px; }
+.checks label {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-weight: 600;
+  font-size: 13px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  padding: 8px 11px;
+  border-radius: 11px;
+  margin: 0;
+  cursor: pointer;
+}
+.checks input { width: 17px; height: 17px; min-height: 17px; flex: 0 0 auto; margin-top: 2px; }
+
+/* Links & Vaccines */
+.links { display: grid; gap: 10px; }
+@media(min-width: 720px) { .links { grid-template-columns: 1fr 1fr; } }
+.link-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px;
+  background: var(--surface2);
+  text-decoration: none;
+  color: var(--ink);
+  transition: all 0.15s ease;
+}
+.link-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+.link-card strong { display: block; font-size: 14.5px; }
+.link-card span { color: var(--muted); font-size: 12.5px; }
+
+.vacc { display: grid; gap: 8px; }
+.vrow {
+  display: grid;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  padding: 11px 14px;
+  background: var(--surface2);
+}
+@media(min-width: 700px) { .vrow { grid-template-columns: 160px 1fr; align-items: center; } }
+.vrow b { color: var(--accent-dark); font-size: 14px; }
+.small { font-size: 12.5px; color: var(--muted); }
+
+/* Toast / Inline Notification (No alert/confirm) */
+.toast-msg {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: var(--ink);
+  color: var(--surface);
+  padding: 12px 18px;
+  border-radius: 14px;
+  font-size: 13.5px;
+  font-weight: 700;
+  box-shadow: 0 12px 28px rgba(0,0,0,0.28);
+  z-index: 9999;
+  opacity: 0;
+  transform: translateY(12px);
+  pointer-events: none;
+  transition: all 0.22s ease;
+}
+.toast-msg.show { opacity: 1; transform: translateY(0); }
+
+/* Modal */
+dialog {
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--surface);
+  color: var(--ink);
+  padding: 24px;
+  max-width: 680px;
+  width: 92vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.45);
+}
+dialog::backdrop { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); }
+
+/* Printable Area (Receta, Historia, Labs, Certificados, Consentimiento) */
+#printSheet {
+  display: none;
+  background: #ffffff;
+  color: #0f172a;
+  border: 1px solid #cbd5e1;
+  border-radius: 16px;
+  padding: 32px 36px;
+  margin: 22px auto;
+  max-width: 820px;
+  box-shadow: var(--shadow);
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+}
+#printSheet.visible { display: block; }
+.rx-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+  border-bottom: 2.5px solid var(--accent);
+  padding-bottom: 14px;
+  margin-bottom: 16px;
+}
+.rx-brand { display: flex; align-items: center; gap: 14px; }
+.rx-logo-box {
+  width: 58px;
+  height: 58px;
+  border-radius: 14px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.rx-logo-box img { width: 100%; height: 100%; object-fit: contain; }
+.rx-doc-info h2 { font-family: 'Fraunces', Georgia, serif; font-size: 20px; color: #0f172a; margin: 0; }
+.rx-doc-info p { margin: 2px 0 0; font-size: 12.5px; color: #475569; line-height: 1.35; }
+.rx-meta { text-align: right; font-size: 12.5px; color: #334155; }
+.rx-patient-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  font-size: 13px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px 16px;
+}
+.rx-vitals-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 12px;
+  background: #f1f5f9;
+  padding: 7px 12px;
+  border-radius: 8px;
+  margin-bottom: 14px;
+  color: #334155;
+}
+.rx-allergy-strip {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  font-weight: 700;
+  font-size: 12.5px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  margin-bottom: 14px;
+}
+.rx-body { min-height: 220px; }
+.rx-rp { font-family: 'Fraunces', Georgia, serif; font-size: 22px; font-weight: 700; color: var(--accent); margin-bottom: 8px; }
+.rx-med-list { margin: 0; padding-left: 20px; }
+.rx-med-list li { margin-bottom: 10px; font-size: 14px; line-height: 1.45; }
+.rx-footer {
+  margin-top: 32px;
+  padding-top: 12px;
+  border-top: 1px solid #cbd5e1;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  font-size: 12px;
+  color: #475569;
+}
+.rx-sign {
+  text-align: center;
+  width: 230px;
+  border-top: 1.5px solid #0f172a;
+  padding-top: 6px;
+  color: #0f172a;
+  font-weight: 700;
+  white-space: pre-line;
+}
+
+footer { margin-top: 32px; color: var(--muted); font-size: 12.5px; text-align: center; }
+
+@media print {
+  body { background: #ffffff !important; color: #000000 !important; }
+  .wrap, dialog, .toast-msg { display: none !important; }
+  #printSheet {
+    display: block !important;
+    box-shadow: none !important;
+    border: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+  }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <!-- Barra superior de herramientas y persistencia -->
+  <div class="utility-bar">
+    <div class="status-pill">
+      <span class="status-dot"></span>
+      <span>Consultorio Pro v4 · Guardado automático local</span>
+    </div>
+    <div class="utility-actions">
+      <button class="btn btn-secondary btn-sm" type="button" id="openMembreteBtn">🪪 Membrete y QR</button>
+      <button class="btn btn-secondary btn-sm" type="button" id="openTemplatesBtn">⚙️ Esquemas y Plantillas</button>
+      <button class="btn btn-secondary btn-sm" type="button" id="toggleWardModeBtn">📱 Pase de Visita</button>
+      <select id="themeSelect" aria-label="Color del tema" style="min-height:32px;padding:4px 10px;font-size:12px;width:auto">
+        <option value="teal">Tema: Verde Clínico</option>
+        <option value="navy">Tema: Azul Hospitalario</option>
+        <option value="berry">Tema: Rosa Clínico</option>
+      </select>
+      <button class="btn btn-secondary btn-sm" type="button" id="toggleDarkBtn">🌓 Modo Oscuro</button>
+      <button class="btn btn-secondary btn-sm" type="button" id="exportJsonBtn">💾 Respaldo (.json)</button>
+      <button class="btn btn-ghost btn-sm" type="button" id="importJsonBtn">📂 Restaurar</button>
+      <input type="file" id="importJsonFile" accept=".json" style="display:none">
+    </div>
+  </div>
+
+  <!-- Hero Banner -->
+  <header class="hero">
+    <div>
+      <div class="hero-badge">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M2 12h20"/></svg>
+        <span id="heroClinicBadge">Consultorio Médico · Expediente Clínico Electrónico</span>
+      </div>
+      <h1 id="heroTitle">Consultorio Médico Pro v4</h1>
+      <p class="lead">Recetas inteligentes con alertas de alergias cruzadas e interacciones, esquemas personalizables, expediente longitudinal, paraclínicos, gasometría y calculadoras clínicas.</p>
+      <div class="hero-stats">
+        <div class="stat-box"><strong id="statConsultas">0</strong><span>Consultas</span></div>
+        <div class="stat-box"><strong id="statHistorias">0</strong><span>Expedientes</span></div>
+        <div class="stat-box"><strong id="statCitas">0</strong><span>Citas próximas</span></div>
+        <div class="stat-box"><strong id="statIngresos">$0</strong><span>Ingresos reg.</span></div>
+      </div>
+    </div>
+    <div class="hero-art" aria-hidden="true">
+      <svg viewBox="0 0 280 210" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="16" width="240" height="178" rx="22" fill="rgba(255,255,255,0.12)" stroke="rgba(255,255,255,0.28)" stroke-width="1.5"/>
+        <rect x="44" y="38" width="46" height="46" rx="12" fill="rgba(255,255,255,0.22)"/>
+        <path d="M67 48V74M54 61H80" stroke="#ffffff" stroke-width="5" stroke-linecap="round"/>
+        <rect x="104" y="42" width="128" height="10" rx="5" fill="rgba(255,255,255,0.75)"/>
+        <rect x="104" y="60" width="88" height="8" rx="4" fill="rgba(255,255,255,0.42)"/>
+        <path d="M38 124H82L94 98L108 152L122 108L132 124H242" stroke="#5eead4" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <text x="44" y="172" fill="#ffffff" font-family="Georgia, serif" font-weight="bold" font-size="24">Rx</text>
+        <circle cx="215" cy="162" r="14" stroke="#ffffff" stroke-width="3" fill="rgba(255,255,255,0.15)"/>
+        <circle cx="215" cy="162" r="5" fill="#5eead4"/>
+        <path d="M165 162H201" stroke="rgba(255,255,255,0.6)" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+    </div>
+  </header>
+
+  <!-- Menú Principal (7 Módulos) -->
+  <nav class="menu" aria-label="Secciones del consultorio">
+    <button type="button" data-target="receta" class="active">
+      <span class="ico-wrap"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>
+      <strong>RECETA</strong>
+      <span class="desc">Esquemas, alergias y PDF/QR</span>
+    </button>
+    <button type="button" data-target="bitacora">
+      <span class="ico-wrap"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+      <strong>EXPEDIENTES</strong>
+      <span class="desc">Bitácora, línea de tiempo y citas</span>
+    </button>
+    <button type="button" data-target="historia">
+      <span class="ico-wrap"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg></span>
+      <strong>HISTORIA / SOAP</strong>
+      <span class="desc">NOM-004, ORL y evolución</span>
+    </button>
+    <button type="button" data-target="documentos">
+      <span class="ico-wrap"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span>
+      <strong>DOCUMENTOS</strong>
+      <span class="desc">Labs, ORL, certificados y legal</span>
+    </button>
+    <button type="button" data-target="escalas">
+      <span class="ico-wrap"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="10" y2="10"/><line x1="14" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="10" y2="14"/><line x1="14" y1="14" x2="16" y2="14"/><line x1="8" y1="18" x2="16" y2="18"/></svg></span>
+      <strong>CALCULADORAS</strong>
+      <span class="desc">14 escalas, gaso y paraclínicos</span>
+    </button>
+    <button type="button" data-target="medicamentos">
+      <span class="ico-wrap"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.5 20.5 20.5 10.5a4.95 4.95 0 1 0-7-7L3.5 13.5a4.95 4.95 0 1 0 7 7Z"/><line x1="8.5" y1="8.5" x2="15.5" y2="15.5"/></svg></span>
+      <strong>VADEMÉCUM</strong>
+      <span class="desc">Fármacos y dosis de consulta</span>
+    </button>
+    <button type="button" data-target="pediatria">
+      <span class="ico-wrap"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></span>
+      <strong>PEDIATRÍA</strong>
+      <span class="desc">Dosis en mL y vacunas 2026</span>
+    </button>
+  </nav>
+
+  <!-- ===================================================================== -->
+  <!-- PANEL 1: RECETA MÉDICA INTELIGENTE                                    -->
+  <!-- ===================================================================== -->
+  <section id="receta" class="panel active">
+    <div class="panel-head">
+      <div>
+        <h2>Receta médica inteligente</h2>
+        <p>Usa esquemas terapéuticos personalizables, recibe alertas de alergias cruzadas e interacciones, y genera la receta en PDF con tu membrete y QR.</p>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-secondary btn-sm" type="button" id="cloneLastRxBtn">📋 Clonar última consulta</button>
+        <button class="btn btn-secondary btn-sm" type="button" id="manageKitsInlineBtn">⚙️ Gestionar esquemas</button>
+        <button class="btn btn-secondary btn-sm" type="button" id="editMembreteInlineBtn">✏️ Membrete / QR</button>
+      </div>
+    </div>
+
+    <!-- Alertas dinámicas de alergia cruzada e interacciones medicamentosas -->
+    <div id="rxAllergyWarning" class="allergy-banner" role="alert"></div>
+    <div id="rxInteractionWarning" class="interaction-banner" role="alert"></div>
+
+    <!-- Kits / Esquemas rápidos por diagnóstico (dinámicos) -->
+    <div style="margin-bottom:14px">
+      <label style="margin-bottom:6px">⚡ Esquemas terapéuticos rápidos (1 clic carga diagnóstico, medicamentos e indicaciones):</label>
+      <div class="chip-bar" id="rxKitsBar"></div>
+    </div>
+
+    <form id="recetaForm">
+      <div class="grid grid3">
+        <div class="field"><label for="rPaciente">Nombre del paciente *</label><input id="rPaciente" required placeholder="Nombre completo"></div>
+        <div class="field"><label for="rEdad">Edad / Sexo</label><input id="rEdad" placeholder="Ej. 34 años · Femenino"></div>
+        <div class="field"><label for="rFecha">Fecha</label><input id="rFecha" type="date" required></div>
+      </div>
+
+      <div class="grid grid3">
+        <div class="field"><label for="rDiagnostico">Diagnóstico clínico</label><input id="rDiagnostico" placeholder="Ej. Faringoamigdalitis aguda"></div>
+        <div class="field"><label for="rAlergias">Alergias conocidas (activa detector cruzado)</label><input id="rAlergias" placeholder="Ej. Negadas / Penicilina / AINE"></div>
+        <div class="field"><label for="rHonorarios">Honorarios consulta ($ MXN, opcional)</label><input id="rHonorarios" type="number" min="0" step="10" placeholder="Ej. 500"></div>
+      </div>
+
+      <!-- Signos vitales opcionales -->
+      <div class="card" style="margin-bottom:14px;padding:12px 14px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <strong style="font-size:13px">Signos vitales y somatometría en receta (opcional)</strong>
+          <label style="display:inline-flex;align-items:center;gap:6px;margin:0;font-size:12.5px;cursor:pointer">
+            <input type="checkbox" id="rIncludeVitals" checked style="width:16px;height:16px;min-height:16px"> Incluir en impresión
+          </label>
+        </div>
+        <div class="grid grid4">
+          <div class="field" style="margin:0"><label>Peso (kg)</label><input id="rvPeso" placeholder="70"></div>
+          <div class="field" style="margin:0"><label>Talla (m)</label><input id="rvTalla" placeholder="1.68"></div>
+          <div class="field" style="margin:0"><label>TA (mmHg)</label><input id="rvTa" placeholder="120/80"></div>
+          <div class="field" style="margin:0"><label>Temp (°C) / SpO₂</label><input id="rvTemp" placeholder="36.6 °C · 98%"></div>
+        </div>
+      </div>
+
+      <!-- Constructor Multimedicamento -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin:14px 0 8px;flex-wrap:wrap;gap:8px">
+        <h3>Prescripción (Rp.)</h3>
+        <button class="btn btn-primary btn-sm" type="button" id="addRxMedBtn">+ Agregar otro medicamento</button>
+      </div>
+      <div id="rxMedListContainer"></div>
+
+      <!-- Indicaciones y plantillas rápidas (dinámicas) -->
+      <div class="field" style="margin-top:12px">
+        <label for="rIndicaciones">Indicaciones generales, cuidados y signos de alarma</label>
+        <div class="chip-bar" id="rxAlarmChipsBar"></div>
+        <textarea id="rIndicaciones" placeholder="Indicaciones adicionales para el paciente..."></textarea>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-primary" type="button" id="previewRecetaBtn">👁️ Vista previa de receta</button>
+        <button class="btn btn-secondary" type="button" id="printDirectBtn">🖨️ Imprimir / Guardar PDF</button>
+        <button class="btn btn-secondary" type="button" id="saveRxToBitacoraBtn">💾 Guardar en Expediente / Bitácora</button>
+        <button class="btn btn-ghost" type="button" id="clearRxBtn">Limpiar receta</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- PANEL 2: EXPEDIENTES, BITÁCORA LONGITUDINAL Y CITAS WHATSAPP          -->
+  <!-- ===================================================================== -->
+  <section id="bitacora" class="panel">
+    <div class="panel-head">
+      <div>
+        <h2>Expedientes, bitácora y agenda de citas</h2>
+        <p>Registra consultas con control de ingresos, visualiza el historial longitudinal de cada paciente con gráficas de evolución y envía recordatorios por WhatsApp.</p>
+      </div>
+      <button class="btn btn-secondary" id="exportCsvBtn" type="button">⬇ Exportar a Excel (.csv)</button>
+    </div>
+
+    <div class="subtabs">
+      <button type="button" class="subtab-btn active" data-sub="subBitacoraList">📋 Bitácora General y Registro</button>
+      <button type="button" class="subtab-btn" data-sub="subExpedienteTimeline">📈 Expediente Longitudinal por Paciente</button>
+      <button type="button" class="subtab-btn" data-sub="subAgendaCitas">📅 Próximas Citas y WhatsApp</button>
+    </div>
+
+    <!-- SUBVISTA A: BITÁCORA GENERAL -->
+    <div id="subBitacoraList" class="subview active">
+      <form id="pacienteForm">
+        <div class="grid grid4">
+          <div class="field"><label>Fecha de consulta *</label><input id="pFecha" type="date" required></div>
+          <div class="field"><label>Nombre completo *</label><input id="pNombre" required placeholder="Nombre del paciente"></div>
+          <div class="field"><label>Edad (años)</label><input id="pEdad" type="number" min="0" max="120" placeholder="Ej. 28"></div>
+          <div class="field"><label>Sexo</label><select id="pSexo"><option>Femenino</option><option>Masculino</option><option>Otro</option></select></div>
+        </div>
+        <div class="grid grid4">
+          <div class="field"><label>Teléfono WhatsApp (10 dígitos)</label><input id="pTel" type="tel" placeholder="Ej. 2221234567"></div>
+          <div class="field"><label>Motivo de consulta</label><input id="pMotivo" placeholder="Ej. Odinofagia y fiebre"></div>
+          <div class="field"><label>Diagnóstico</label><input id="pDx" placeholder="Diagnóstico principal"></div>
+          <div class="field"><label>Honorarios ($ MXN)</label><input id="pCosto" type="number" min="0" step="10" placeholder="Ej. 500"></div>
+        </div>
+        <div class="grid grid4">
+          <div class="field"><label>Peso (kg, para gráfica)</label><input id="pPeso" type="number" step="0.1" placeholder="70"></div>
+          <div class="field"><label>TA (mmHg, para gráfica)</label><input id="pTa" placeholder="120/80"></div>
+          <div class="field"><label>Tratamiento indicado</label><input id="pTx" placeholder="Resumen del tratamiento"></div>
+          <div class="field"><label>Próxima cita</label><input id="pCita" type="date"></div>
+        </div>
+        <div class="actions">
+          <button class="btn btn-primary" type="submit">+ Guardar consulta en expediente</button>
+        </div>
+      </form>
+
+      <div class="grid grid2" style="margin-top:18px;padding-top:14px;border-top:1px solid var(--line)">
+        <div class="field"><label>🔎 Buscar paciente, motivo o diagnóstico</label><input id="buscarPaciente" placeholder="Escribe para filtrar..."></div>
+        <div class="field"><label>Filtrar por fecha</label><input id="filtroFecha" type="date"></div>
+      </div>
+      <p class="small" id="contadorPacientes">0 consultas registradas.</p>
+      <div class="list" id="listaPacientes"></div>
+    </div>
+
+    <!-- SUBVISTA B: EXPEDIENTE LONGITUDINAL POR PACIENTE -->
+    <div id="subExpedienteTimeline" class="subview">
+      <div class="field" style="max-width:460px">
+        <label for="selectPatientTimeline">Selecciona un paciente para ver su historial unificado y curvas:</label>
+        <select id="selectPatientTimeline">
+          <option value="">-- Seleccionar paciente --</option>
+        </select>
+      </div>
+      <div id="timelineContainer" style="margin-top:16px">
+        <p class="small">Selecciona un paciente de la lista para visualizar sus antecedentes, evolución de peso/tensión arterial y todas sus notas médicas ordenadas cronológicamente.</p>
+      </div>
+    </div>
+
+    <!-- SUBVISTA C: AGENDA DE PRÓXIMAS CITAS -->
+    <div id="subAgendaCitas" class="subview">
+      <p class="small" style="margin-bottom:12px">Pacientes con fecha de seguimiento programada. Haz clic en <strong>Enviar WhatsApp</strong> para abrir el recordatorio redactado automáticamente.</p>
+      <div class="list" id="listaCitasProximas"></div>
+    </div>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- PANEL 3: HISTORIA CLÍNICA Y NOTA DE EVOLUCIÓN SOAP (NOM-004)          -->
+  <!-- ===================================================================== -->
+  <section id="historia" class="panel">
+    <div class="panel-head">
+      <div>
+        <h2>Historia clínica y Nota de Evolución (NOM-004-SSA3-2012)</h2>
+        <p>Alterna entre Historia Clínica, Nota de Evolución (SOAP) o Nota de Urgencias, con bloques modulares de exploración física y pase directo a receta.</p>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <select id="hcTipoDoc" style="min-height:38px;font-size:13px;width:auto">
+          <option value="HISTORIA CLÍNICA">Tipo: Historia Clínica (1ª Vez)</option>
+          <option value="NOTA DE EVOLUCIÓN (SOAP)">Tipo: Nota de Evolución (SOAP)</option>
+          <option value="NOTA DE URGENCIAS">Tipo: Nota de Urgencias</option>
+        </select>
+        <select id="savedHcSelect" style="min-height:38px;font-size:13px;width:auto">
+          <option value="">-- Cargar expediente guardado --</option>
+        </select>
+      </div>
+    </div>
+
+    <form id="hcForm">
+      <h3>1. Ficha de identificación</h3>
+      <div class="grid grid3" style="margin:10px 0 14px">
+        <div class="field"><label>Nombre completo *</label><input id="hcNombre" required placeholder="Nombre del paciente"></div>
+        <div class="field"><label>Fecha de nacimiento / Edad</label><input id="hcEdad" placeholder="Ej. 14/05/1995 · 31 años"></div>
+        <div class="field"><label>Sexo</label><select id="hcSexo"><option>Femenino</option><option>Masculino</option><option>Otro</option></select></div>
+        <div class="field"><label>Ocupación</label><input id="hcOcupacion"></div>
+        <div class="field"><label>Teléfono / Contacto emergencia</label><input id="hcTelefono"></div>
+        <div class="field"><label>Grupo y Rh / Alergias</label><input id="hcAlergias" placeholder="Ej. O+ · Alergia a penicilina"></div>
+      </div>
+      <div class="field"><label>Domicilio</label><input id="hcDomicilio"></div>
+
+      <h3>2. Antecedentes / Subjetivo (S)</h3>
+      <div class="grid grid2" style="margin:10px 0 14px">
+        <div class="field"><label>Antecedentes heredofamiliares (AHF)</label><textarea id="hcAhf" placeholder="DM2, HAS, cardiopatías, neoplasias, alergias en familiares directos..."></textarea></div>
+        <div class="field"><label>Antecedentes personales patológicos (APP)</label><textarea id="hcApp" placeholder="Crónico-degenerativos, cirugías, hospitalizaciones, fracturas, transfusiones..."></textarea></div>
+        <div class="field"><label>Antecedentes personales no patológicos (APNP)</label><textarea id="hcApnp" placeholder="Tabaquismo, alcoholismo, toxicomanías, esquema de vacunación, vivienda..."></textarea></div>
+        <div class="field"><label>Padecimiento actual / Evolución subjetiva (S)</label><textarea id="hcPa" placeholder="Inicio, evolución y estado actual del motivo de consulta; revisión por sistemas..."></textarea></div>
+      </div>
+
+      <h3>3. Signos vitales y somatometría — Objetivo (O)</h3>
+      <div class="grid grid4" style="margin:10px 0 6px">
+        <div class="field"><label>TA (mmHg)</label><input id="hcTa" placeholder="120/80"></div>
+        <div class="field"><label>FC (lpm)</label><input id="hcFc" type="number" placeholder="72"></div>
+        <div class="field"><label>FR (rpm)</label><input id="hcFr" type="number" placeholder="16"></div>
+        <div class="field"><label>Temperatura (°C)</label><input id="hcTemp" type="number" step="0.1" placeholder="36.5"></div>
+        <div class="field"><label>SpO₂ (%)</label><input id="hcSpo2" type="number" placeholder="98"></div>
+        <div class="field"><label>Peso (kg)</label><input id="hcPeso" type="number" step="0.1" placeholder="70"></div>
+        <div class="field"><label>Talla (m)</label><input id="hcTalla" type="number" step="0.01" placeholder="1.65"></div>
+        <div class="field"><label>IMC / PAM automáticos</label><input id="hcCalcSummary" readonly placeholder="—"></div>
+      </div>
+      <p class="result" id="hcImcResult">Captura peso, talla y TA para calcular IMC y Presión Arterial Media (PAM).</p>
+
+      <h3 style="margin-top:16px">4. Exploración física, Análisis (A) y Plan (P)</h3>
+      <div class="field" style="margin-top:8px">
+        <label>Exploración física dirigida (O) — Bloques rápidos en 1 clic:</label>
+        <div class="chip-bar" id="hcEfChipsBar"></div>
+        <textarea id="hcEf" placeholder="Habitus exterior, cabeza y cuello, tórax cardiopulmonar, abdomen, extremidades, neurológico..."></textarea>
+      </div>
+      <div class="grid grid2">
+        <div class="field"><label>Análisis y Diagnóstico(s) (A)</label><textarea id="hcDx" placeholder="Diagnóstico principal, diferenciales e integración clínica"></textarea></div>
+        <div class="field"><label>Plan terapéutico, estudios y pronóstico (P)</label><textarea id="hcPlan" placeholder="Manejo farmacológico, no farmacológico, paraclínicos, signos de alarma y pronóstico"></textarea></div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-primary" type="submit">💾 Guardar en Expediente</button>
+        <button class="btn btn-secondary" type="button" id="hcToRxBtn">📝 Pasar Dx y Plan a Receta</button>
+        <button class="btn btn-secondary" type="button" id="printHcBtn">🖨️ Imprimir / Guardar PDF</button>
+        <button class="btn btn-ghost" type="reset" id="resetHcBtn">Nuevo formato en blanco</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- PANEL 4: DOCUMENTOS MÉDICOS IMPRIMIBLES (LABS, CERTIFICADOS, CONSENT) -->
+  <!-- ===================================================================== -->
+  <section id="documentos" class="panel">
+    <div class="panel-head">
+      <div>
+        <h2>Documentos médicos imprimibles</h2>
+        <p>Genera órdenes de laboratorio, gabinete y ORL, certificados médicos y consentimientos informados con tu membrete y firma en un clic.</p>
+      </div>
+    </div>
+
+    <div class="subtabs">
+      <button type="button" class="subtab-btn active" data-sub="subDocLabs">🧪 Solicitud de Estudios (Lab / Gabinete / ORL)</button>
+      <button type="button" class="subtab-btn" data-sub="subDocCert">📜 Certificado Médico / Justificante</button>
+      <button type="button" class="subtab-btn" data-sub="subDocConsent">✍️ Consentimiento Informado / Referencia</button>
+    </div>
+
+    <!-- SUBVISTA: SOLICITUD DE ESTUDIOS -->
+    <div id="subDocLabs" class="subview active">
+      <div class="grid grid3">
+        <div class="field"><label>Nombre del paciente *</label><input id="labPac" placeholder="Nombre completo"></div>
+        <div class="field"><label>Edad / Sexo</label><input id="labEdad" placeholder="Ej. 42 años · Masculino"></div>
+        <div class="field"><label>Diagnóstico presuntivo</label><input id="labDx" placeholder="Ej. Síndrome metabólico en estudio"></div>
+      </div>
+
+      <div class="grid grid3" style="margin-top:8px">
+        <div class="card">
+          <h4 style="margin-bottom:8px;color:var(--accent-dark)">Hematología y Coagulación</h4>
+          <div class="checks">
+            <label><input type="checkbox" class="lab-chk" data-prep="" value="Biometría Hemática Completa (BHC)"> <span>Biometría Hemática Completa</span></label>
+            <label><input type="checkbox" class="lab-chk" data-prep="" value="Grupo Sanguíneo y Factor Rh"> <span>Grupo Sanguíneo y Factor Rh</span></label>
+            <label><input type="checkbox" class="lab-chk" data-prep="" value="Tiempos de Coagulación (TP, TTPa, INR)"> <span>Tiempos de Coagulación (TP/TTPa)</span></label>
+            <label><input type="checkbox" class="lab-chk" data-prep="" value="Velocidad de Sedimentación Globular (VSG) y PCR"> <span>VSG y Proteína C Reactiva (PCR)</span></label>
+          </div>
+        </div>
+        <div class="card">
+          <h4 style="margin-bottom:8px;color:var(--accent-dark)">Química y Metabólico</h4>
+          <div class="checks">
+            <label><input type="checkbox" class="lab-chk" data-prep="Ayuno estricto de 8 a 12 horas (solo agua simple)." value="Química Sanguínea de 6 elementos (Glucosa, Urea, Creatinina, Ác. Úrico, Colesterol, Triglicéridos)"> <span>Química Sanguínea 6 elementos</span></label>
+            <label><input type="checkbox" class="lab-chk" data-prep="" value="Hemoglobina Glucosilada (HbA1c)"> <span>Hemoglobina Glucosilada (HbA1c)</span></label>
+            <label><input type="checkbox" class="lab-chk" data-prep="Ayuno de 12 horas." value="Perfil Lipídico Completo (CT, HDL, LDL, VLDL, TG)"> <span>Perfil Lipídico Completo</span></label>
+            <label><input type="checkbox" class="lab-chk" data-prep="Ayuno de 8 horas." value="Pruebas de Funcionamiento Hepático (PFH)"> <span>Pruebas de Función Hepática (PFH)</span></label>
+            <label><input type="checkbox" class="lab-chk" data-prep="" value="Perfil Tiroideo (TSH, T4 libre, T3 total)"> <span>Perfil Tiroideo (TSH, T4L, T3)</span></label>
+          </div>
+        </div>
+        <div class="card">
+          <h4 style="margin-bottom:8px;color:var(--accent-dark)">Orina, Gabinete y ORL</h4>
+          <div class="checks">
+            <label><input type="checkbox" class="lab-chk" data-prep="Recolectar primera orina de la mañana (chorro medio) en frasco estéril previo aseo." value="Examen General de Orina (EGO)"> <span>Examen General de Orina (EGO)</span></label>
+            <label><input type="checkbox" class="lab-chk" data-prep="Primera orina de la mañana chorro medio antes de iniciar antibiótico." value="Urocultivo con Antibiograma"> <span>Urocultivo con Antibiograma</span></label>
+            <label><input type="checkbox" class="lab-chk" data-prep="" value="Radiografía de Tórax PA y Lateral"> <span>Radiografía de Tórax (PA y Lat)</span></label>
+            <label><input type="checkbox" class="lab-chk" data-prep="Ayuno de 6 horas y vejiga llena (tomar 1 L de agua 1 hora antes)." value="Ultrasonido Abdominal Completo / Pélvico"> <span>Ultrasonido Abdominal / Pélvico</span></label>
+            <label><input type="checkbox" class="lab-chk" data-prep="" value="Electrocardiograma de 12 derivaciones en reposo"> <span>Electrocardiograma (12 deriv.)</span></label>
+            <label><input type="checkbox" class="lab-chk" data-prep="Evitar exposición a ruido intenso 12 horas antes." value="Audiometría Tonal y Logoaudiometría + Timpanometría"> <span>Audiometría + Timpanometría (ORL)</span></label>
+            <label><input type="checkbox" class="lab-chk" data-prep="" value="TAC Simple de Senos Paranasales (cortes axiales y coronales)"> <span>TAC de Senos Paranasales</span></label>
+            <label><input type="checkbox" class="lab-chk" data-prep="Ayuno de 3 horas previo al estudio." value="Nasofibrolaringoscopia Flexible Diagnóstica"> <span>Nasofibrolaringoscopia Flexible</span></label>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid2" style="margin-top:12px">
+        <div class="field"><label>Otros estudios específicos (texto libre)</label><textarea id="labExtra" placeholder="Ej. Perfil prenatal, Antígeno prostático específico (APE), Espirometría simple y post-broncodilatador..."></textarea></div>
+        <div class="field"><label>Indicaciones de preparación (se llenan solas al marcar estudios)</label><textarea id="labPrep" placeholder="Indicaciones de ayuno o recolección de muestra..."></textarea></div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary" type="button" id="printLabBtn">🖨️ Imprimir Solicitud de Estudios / PDF</button>
+      </div>
+    </div>
+
+    <!-- SUBVISTA: CERTIFICADO MÉDICO / JUSTIFICANTE -->
+    <div id="subDocCert" class="subview">
+      <div class="grid grid3">
+        <div class="field"><label>Tipo de documento</label>
+          <select id="certTipo">
+            <option value="buena_salud">Certificado Médico de Buena Salud (Escolar / Laboral)</option>
+            <option value="justificante">Justificante Médico / Reposo en Casa</option>
+            <option value="deportivo">Certificado de Aptitud Física / Deportiva</option>
+          </select>
+        </div>
+        <div class="field"><label>Nombre completo del paciente *</label><input id="certPac" placeholder="Nombre del paciente"></div>
+        <div class="field"><label>Edad / Sexo</label><input id="certEdad" placeholder="Ej. 22 años · Masculino"></div>
+      </div>
+      <div class="grid grid4">
+        <div class="field"><label>Peso (kg)</label><input id="certPeso" placeholder="68"></div>
+        <div class="field"><label>Talla (m)</label><input id="certTalla" placeholder="1.72"></div>
+        <div class="field"><label>TA (mmHg)</label><input id="certTa" placeholder="118/76"></div>
+        <div class="field"><label>FC / Temp</label><input id="certFcTemp" placeholder="72 lpm · 36.5 °C"></div>
+      </div>
+      <div class="grid grid2">
+        <div class="field"><label>Días de reposo (si es justificante)</label><input id="certDias" placeholder="Ej. 48 horas (los días 15 y 16 de noviembre de 2026)"></div>
+        <div class="field"><label>A quien corresponda / Institución (opcional)</label><input id="certDestino" placeholder="Ej. A QUIEN CORRESPONDA / Dirección Escolar"></div>
+      </div>
+      <div class="field"><label>Texto redactado del certificado (puedes editarlo libremente)</label>
+        <textarea id="certTexto" style="min-height:130px"></textarea>
+      </div>
+      <div class="actions">
+        <button class="btn btn-secondary" type="button" id="regenCertBtn">🔄 Actualizar redacción automática</button>
+        <button class="btn btn-primary" type="button" id="printCertBtn">🖨️ Imprimir Certificado / PDF</button>
+      </div>
+    </div>
+
+    <!-- SUBVISTA: CONSENTIMIENTO INFORMADO / HOJA DE REFERENCIA -->
+    <div id="subDocConsent" class="subview">
+      <div class="grid grid3">
+        <div class="field"><label>Formato médico-legal</label>
+          <select id="legalTipo">
+            <option value="consentimiento">Carta de Consentimiento Informado (Procedimiento menor)</option>
+            <option value="referencia">Hoja de Referencia y Contrarreferencia (NOM-004)</option>
+          </select>
+        </div>
+        <div class="field"><label>Nombre del paciente *</label><input id="legalPac" placeholder="Nombre completo"></div>
+        <div class="field"><label>Edad / Testigo o Familiar</label><input id="legalTestigo" placeholder="Ej. 35 años · Familiar: María Pérez"></div>
+      </div>
+      <div class="grid grid2">
+        <div class="field"><label>Procedimiento a realizar / Unidad receptora</label><input id="legalProc" placeholder="Ej. Lavado ótico bilateral / Sutura de herida superficial / Hospital General"></div>
+        <div class="field"><label>Diagnóstico clínico</label><input id="legalDx" placeholder="Ej. Tapón de cerumen impactado bilateral"></div>
+      </div>
+      <div class="field"><label>Contenido del documento (editable)</label>
+        <textarea id="legalTexto" style="min-height:150px"></textarea>
+      </div>
+      <div class="actions">
+        <button class="btn btn-secondary" type="button" id="regenLegalBtn">🔄 Regenerar texto base</button>
+        <button class="btn btn-primary" type="button" id="printLegalBtn">🖨️ Imprimir Documento / PDF</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- PANEL 5: 14 CALCULADORAS CLÍNICAS, PARACLÍNICOS Y GASOMETRÍA          -->
+  <!-- ===================================================================== -->
+  <section id="escalas" class="panel">
+    <div class="panel-head">
+      <div>
+        <h2>Calculadoras clínicas, paraclínicos, gasometría y escalas (14 herramientas)</h2>
+        <p>Resultados e interpretación fisiopatológica instantánea para apoyo en consulta y urgencias.</p>
+      </div>
+    </div>
+
+    <div class="calc-grid">
+      <!-- 1. GASOMETRÍA ARTERIAL -->
+      <div class="card">
+        <h3>Interpretador de Gasometría Arterial + Anion Gap</h3>
+        <div class="grid grid3" style="margin-top:10px">
+          <div class="field"><label>pH (7.35–7.45)</label><input id="gasPh" type="number" step="0.01" placeholder="7.32"></div>
+          <div class="field"><label>PaCO₂ (35–45 mmHg)</label><input id="gasPco2" type="number" step="0.1" placeholder="30"></div>
+          <div class="field"><label>HCO₃⁻ (22–26 mEq/L)</label><input id="gasHco3" type="number" step="0.1" placeholder="15"></div>
+        </div>
+        <div class="grid grid2">
+          <div class="field" style="margin:0"><label>Na⁺ (opcional, mEq/L)</label><input id="gasNa" type="number" step="0.1" placeholder="140"></div>
+          <div class="field" style="margin:0"><label>Cl⁻ (opcional, mEq/L)</label><input id="gasCl" type="number" step="0.1" placeholder="104"></div>
+        </div>
+        <p class="result" id="gasResult">Captura pH, PaCO₂ y HCO₃⁻ para diagnosticar el trastorno primario, compensación (Winter) y Anion Gap.</p>
+      </div>
+
+      <!-- 2. INTERPRETADOR RÁPIDO DE PARACLÍNICOS (BH, QS Y EGO) -->
+      <div class="card">
+        <h3>Interpretador Rápido de Paraclínicos (BH, QS y EGO)</h3>
+        <div class="grid grid3" style="margin-top:10px">
+          <div class="field"><label>Hb (g/dL)</label><input id="labHb" type="number" step="0.1" placeholder="13.5"></div>
+          <div class="field"><label>Leucos (×10³/µL)</label><input id="labLeu" type="number" step="0.1" placeholder="7.8"></div>
+          <div class="field"><label>Plaquetas (×10³)</label><input id="labPlt" type="number" step="1" placeholder="250"></div>
+          <div class="field"><label>Glucosa (mg/dL)</label><input id="labGlu" type="number" step="1" placeholder="95"></div>
+          <div class="field"><label>Creatinina (mg/dL)</label><input id="labCr" type="number" step="0.01" placeholder="0.85"></div>
+          <div class="field"><label>EGO (Nitritos/Leu)</label>
+            <select id="labEgo">
+              <option value="normal">Normal / Negativo</option>
+              <option value="patologico">Nitritos (+) o Esterasa/Leucos (+)</option>
+            </select>
+          </div>
+        </div>
+        <p class="result" id="paraclinicosResult">Captura resultados para detectar hallazgos fuera de rango e insertarlos en la nota médica.</p>
+        <div class="actions" style="margin-top:8px">
+          <button type="button" class="btn btn-secondary btn-sm" id="insertLabsToHcBtn">📋 Insertar resumen en Historia/SOAP</button>
+        </div>
+      </div>
+
+      <!-- 3. CORRECCIÓN SODIO Y CALCIO -->
+      <div class="card">
+        <h3>Sodio Corregido (Glucosa) y Calcio Corregido (Albúmina)</h3>
+        <div class="grid grid2" style="margin-top:10px">
+          <div class="field"><label>Sodio medido (mEq/L)</label><input id="corrNa" type="number" step="0.1" placeholder="132"></div>
+          <div class="field"><label>Glucosa sérica (mg/dL)</label><input id="corrGlu" type="number" step="1" placeholder="380"></div>
+          <div class="field" style="margin:0"><label>Calcio total (mg/dL)</label><input id="corrCa" type="number" step="0.1" placeholder="7.8"></div>
+          <div class="field" style="margin:0"><label>Albúmina sérica (g/dL)</label><input id="corrAlb" type="number" step="0.1" placeholder="2.5"></div>
+        </div>
+        <p class="result" id="corrResult">Captura Na⁺ + Glucosa (Katz/Hillier) y/o Ca²⁺ + Albúmina (Payne).</p>
+      </div>
+
+      <!-- 4. IMC + SC + Peso Ideal -->
+      <div class="card">
+        <h3>IMC, Superficie Corporal y Peso Ideal</h3>
+        <div class="grid grid3" style="margin-top:10px">
+          <div class="field"><label>Peso (kg)</label><input id="imcPeso" type="number" step="0.1" placeholder="70"></div>
+          <div class="field"><label>Talla (m)</label><input id="imcTalla" type="number" step="0.01" placeholder="1.70"></div>
+          <div class="field"><label>Sexo</label><select id="imcSexo"><option value="M">Masculino</option><option value="F">Femenino</option></select></div>
+        </div>
+        <p class="result" id="imcResult">Captura peso y talla para ver IMC, SC (Mosteller) y peso ideal.</p>
+      </div>
+
+      <!-- 5. TFG CKD-EPI 2021 -->
+      <div class="card">
+        <h3>Tasa de Filtración Glomerular (CKD-EPI 2021)</h3>
+        <div class="grid grid3" style="margin-top:10px">
+          <div class="field"><label>Creatinina (mg/dL)</label><input id="tfgCr" type="number" step="0.01" placeholder="0.9"></div>
+          <div class="field"><label>Edad (años)</label><input id="tfgEdad" type="number" min="18" max="120" placeholder="45"></div>
+          <div class="field"><label>Sexo</label><select id="tfgSexo"><option value="F">Femenino</option><option value="M">Masculino</option></select></div>
+        </div>
+        <p class="result" id="tfgResult">TFGe: captura creatinina y edad (≥18 años).</p>
+      </div>
+
+      <!-- 6. FPP Naegele -->
+      <div class="card">
+        <h3>Fecha Probable de Parto (Regla de Naegele)</h3>
+        <div class="field" style="margin-top:10px"><label>Fecha de última menstruación (FUR)</label><input id="fur" type="date"></div>
+        <p class="result" id="fppResult">FPP: selecciona la FUR para calcular edad gestacional y trimestre.</p>
+      </div>
+
+      <!-- 7. PAM Presión Arterial Media -->
+      <div class="card">
+        <h3>Presión Arterial Media (PAM)</h3>
+        <div class="grid grid2" style="margin-top:10px">
+          <div class="field"><label>Sistólica (mmHg)</label><input id="pamSis" type="number" placeholder="120"></div>
+          <div class="field"><label>Diastólica (mmHg)</label><input id="pamDia" type="number" placeholder="80"></div>
+        </div>
+        <p class="result" id="pamResult">PAM: captura TA sistólica y diastólica (normal: 70–100 mmHg).</p>
+      </div>
+
+      <!-- 8. Escala de Alvarado (Apendicitis) -->
+      <div class="card">
+        <h3>Escala de Alvarado (MANTRELS) — Apendicitis</h3>
+        <div class="checks" style="margin-top:10px">
+          <label><input type="checkbox" class="alvarado" value="1"> <span><strong>M</strong> — Migración del dolor a fosa ilíaca derecha (+1)</span></label>
+          <label><input type="checkbox" class="alvarado" value="1"> <span><strong>A</strong> — Anorexia / Hiporexia (+1)</span></label>
+          <label><input type="checkbox" class="alvarado" value="1"> <span><strong>N</strong> — Náusea y/o vómito (+1)</span></label>
+          <label><input type="checkbox" class="alvarado" value="2"> <span><strong>T</strong> — Dolor a la palpación en FID (+2)</span></label>
+          <label><input type="checkbox" class="alvarado" value="1"> <span><strong>R</strong> — Rebote positivo / Blumberg (+1)</span></label>
+          <label><input type="checkbox" class="alvarado" value="1"> <span><strong>E</strong> — Elevación de temperatura ≥ 37.3 °C (+1)</span></label>
+          <label><input type="checkbox" class="alvarado" value="2"> <span><strong>L</strong> — Leucocitosis &gt; 10,000/µL (+2)</span></label>
+          <label><input type="checkbox" class="alvarado" value="1"> <span><strong>S</strong> — Desviación a la izquierda / Neutrofilia &gt; 75% (+1)</span></label>
+        </div>
+        <p class="result" id="alvaradoResult">Alvarado: 0/10 — Baja probabilidad de apendicitis aguda.</p>
+      </div>
+
+      <!-- 9. Criterios de Wells (TVP) -->
+      <div class="card">
+        <h3>Criterios de Wells — Trombosis Venosa Profunda (TVP)</h3>
+        <div class="checks" style="margin-top:10px">
+          <label><input type="checkbox" class="wells" value="1"> <span>Cáncer activo o en tratamiento últimos 6 meses (+1)</span></label>
+          <label><input type="checkbox" class="wells" value="1"> <span>Parálisis, paresia o inmovilización reciente de miembro inferior (+1)</span></label>
+          <label><input type="checkbox" class="wells" value="1"> <span>Encamamiento &gt; 3 días o cirugía mayor &lt; 12 semanas (+1)</span></label>
+          <label><input type="checkbox" class="wells" value="1"> <span>Dolor localizado en trayecto venoso profundo (+1)</span></label>
+          <label><input type="checkbox" class="wells" value="1"> <span>Edema de toda la extremidad (+1)</span></label>
+          <label><input type="checkbox" class="wells" value="1"> <span>Diferencia de pantorrilla &gt; 3 cm respecto a la sana (+1)</span></label>
+          <label><input type="checkbox" class="wells" value="1"> <span>Edema con fóvea mayor en pierna sintomática (+1)</span></label>
+          <label><input type="checkbox" class="wells" value="1"> <span>Venas colaterales superficiales no varicosas (+1)</span></label>
+          <label><input type="checkbox" class="wells" value="1"> <span>Antecedente previo de TVP documentada (+1)</span></label>
+          <label><input type="checkbox" class="wells" value="-2"> <span>Diagnóstico alternativo tan o más probable (-2)</span></label>
+        </div>
+        <p class="result" id="wellsResult">Wells TVP: 0 pts — Probabilidad baja; considerar Dímero D.</p>
+      </div>
+
+      <!-- 10. Escala de Glasgow -->
+      <div class="card">
+        <h3>Escala de Coma de Glasgow (3–15)</h3>
+        <div class="grid" style="margin-top:10px">
+          <div class="field"><label>Apertura ocular</label><select id="gOcular"><option value="4">4 · Espontánea</option><option value="3">3 · A la voz</option><option value="2">2 · Al dolor</option><option value="1">1 · Nula</option></select></div>
+          <div class="field"><label>Respuesta verbal</label><select id="gVerbal"><option value="5">5 · Orientado</option><option value="4">4 · Confuso</option><option value="3">3 · Palabras inapropiadas</option><option value="2">2 · Sonidos incomprensibles</option><option value="1">1 · Nula</option></select></div>
+          <div class="field"><label>Respuesta motora</label><select id="gMotora"><option value="6">6 · Obedece órdenes</option><option value="5">5 · Localiza el dolor</option><option value="4">4 · Retira al dolor</option><option value="3">3 · Flexión anormal</option><option value="2">2 · Extensión anormal</option><option value="1">1 · Nula</option></select></div>
+        </div>
+        <p class="result" id="glasgowResult">Glasgow: 15/15 — Traumatismo leve</p>
+      </div>
+
+      <!-- 11. CURB-65 -->
+      <div class="card">
+        <h3>CURB-65 — Neumonía (0–5)</h3>
+        <div class="checks" style="margin-top:10px">
+          <label><input type="checkbox" class="curb" value="1"> <span><strong>C</strong> — Confusión (nueva desorientación)</span></label>
+          <label><input type="checkbox" class="curb" value="1"> <span><strong>U</strong> — Urea &gt; 7 mmol/L (BUN &gt; 19 mg/dL)</span></label>
+          <label><input type="checkbox" class="curb" value="1"> <span><strong>R</strong> — Frecuencia respiratoria ≥ 30/min</span></label>
+          <label><input type="checkbox" class="curb" value="1"> <span><strong>B</strong> — TA sistólica &lt; 90 o diastólica ≤ 60 mmHg</span></label>
+          <label><input type="checkbox" class="curb" value="1"> <span><strong>65</strong> — Edad ≥ 65 años</span></label>
+        </div>
+        <p class="result" id="curbResult">CURB-65: 0 — Riesgo bajo; valorar manejo ambulatorio.</p>
+      </div>
+
+      <!-- 12. Centor Modificado -->
+      <div class="card">
+        <h3>Centor Modificado (McIsaac) — Faringoamigdalitis</h3>
+        <div class="checks" style="margin-top:10px">
+          <label><input type="checkbox" class="centor" value="1"> <span>Temperatura &gt; 38 °C (+1)</span></label>
+          <label><input type="checkbox" class="centor" value="1"> <span>Ausencia de tos (+1)</span></label>
+          <label><input type="checkbox" class="centor" value="1"> <span>Adenopatías cervicales anteriores dolorosas (+1)</span></label>
+          <label><input type="checkbox" class="centor" value="1"> <span>Exudado o hipertrofia amigdalina (+1)</span></label>
+          <div class="field" style="margin:4px 0 0"><label>Grupo de edad</label><select id="centorEdad"><option value="1">3 a 14 años (+1)</option><option value="0" selected>15 a 44 años (0)</option><option value="-1">≥ 45 años (-1)</option></select></div>
+        </div>
+        <p class="result" id="centorResult">Puntaje McIsaac: 0 — Baja probabilidad estreptocócica; manejo sintomático.</p>
+      </div>
+
+      <!-- 13. CHA2DS2-VASc -->
+      <div class="card">
+        <h3>CHA₂DS₂-VASc — Riesgo embólico en FA</h3>
+        <div class="checks" style="margin-top:10px">
+          <label><input type="checkbox" class="chads" value="1"> <span><strong>C</strong> — Insuficiencia cardíaca congestiva (+1)</span></label>
+          <label><input type="checkbox" class="chads" value="1"> <span><strong>H</strong> — Hipertensión arterial (+1)</span></label>
+          <label><input type="checkbox" class="chads" value="2"> <span><strong>A₂</strong> — Edad ≥ 75 años (+2)</span></label>
+          <label><input type="checkbox" class="chads" value="1"> <span><strong>D</strong> — Diabetes mellitus (+1)</span></label>
+          <label><input type="checkbox" class="chads" value="2"> <span><strong>S₂</strong> — EVC / AIT / Tromboembolia previa (+2)</span></label>
+          <label><input type="checkbox" class="chads" value="1"> <span><strong>V</strong> — Enfermedad vascular (+1)</span></label>
+          <label><input type="checkbox" class="chads" value="1"> <span><strong>A</strong> — Edad 65–74 años (+1)</span></label>
+          <label><input type="checkbox" class="chads" value="1"> <span><strong>Sc</strong> — Sexo femenino (+1)</span></label>
+        </div>
+        <p class="result" id="chadsResult">CHA₂DS₂-VASc: 0 — Riesgo bajo; no requiere anticoagulación.</p>
+      </div>
+
+      <!-- 14. TEST FINDRISC -->
+      <div class="card">
+        <h3>Test FINDRISC — Riesgo DM2 a 10 años</h3>
+        <div class="grid grid2" style="margin-top:10px">
+          <div class="field"><label>Edad</label><select class="findrisc"><option value="0">&lt; 45 años (0)</option><option value="2">45–54 años (+2)</option><option value="3">55–64 años (+3)</option><option value="4">&gt; 64 años (+4)</option></select></div>
+          <div class="field"><label>IMC (kg/m²)</label><select class="findrisc"><option value="0">&lt; 25 (0)</option><option value="1">25–30 (+1)</option><option value="3">&gt; 30 (+3)</option></select></div>
+          <div class="field"><label>Perímetro abdominal</label><select class="findrisc"><option value="0">H &lt;94 / M &lt;80 cm (0)</option><option value="3">H 94–102 / M 80–88 (+3)</option><option value="4">H &gt;102 / M &gt;88 (+4)</option></select></div>
+          <div class="field"><label>Actividad ≥30 min/día</label><select class="findrisc"><option value="0">Sí (0)</option><option value="2">No (+2)</option></select></div>
+          <div class="field"><label>Frutas/verduras diarias</label><select class="findrisc"><option value="0">Sí (0)</option><option value="1">No (+1)</option></select></div>
+          <div class="field"><label>Antihipertensivos</label><select class="findrisc"><option value="0">No (0)</option><option value="2">Sí (+2)</option></select></div>
+          <div class="field"><label>Glucosa alta previa</label><select class="findrisc"><option value="0">No (0)</option><option value="5">Sí (+5)</option></select></div>
+          <div class="field"><label>Familiares con DM2</label><select class="findrisc"><option value="0">No (0)</option><option value="3">2º grado (+3)</option><option value="5">1er grado (+5)</option></select></div>
+        </div>
+        <p class="result" id="findriscResult">FINDRISC: 0 pts — Riesgo bajo (1 de cada 100 desarrollará DM2 en 10 años).</p>
+      </div>
+    </div>
+
+    <h3 style="margin:24px 0 10px">Guías y recursos oficiales</h3>
+    <div class="links">
+      <a class="link-card" href="https://www.cenetec-difusion.com/gpc-sns/" target="_blank" rel="noopener"><span><strong>CENETEC — Guías de Práctica Clínica</strong><span>Catálogo Maestro de GPC de México</span></span><span>↗</span></a>
+      <a class="link-card" href="https://www.gob.mx/salud" target="_blank" rel="noopener"><span><strong>Secretaría de Salud (México)</strong><span>Lineamientos, epidemiología y normatividad</span></span><span>↗</span></a>
+      <a class="link-card" href="https://www.imss.gob.mx/profesionales-salud/gpc" target="_blank" rel="noopener"><span><strong>IMSS — Guías Clínicas</strong><span>Algoritmos diagnósticos y terapéuticos</span></span><span>↗</span></a>
+      <a class="link-card" href="https://medlineplus.gov/spanish/" target="_blank" rel="noopener"><span><strong>MedlinePlus en Español</strong><span>Fichas educativas para pacientes</span></span><span>↗</span></a>
+    </div>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- PANEL 6: VADEMÉCUM DE CONSULTA                                        -->
+  <!-- ===================================================================== -->
+  <section id="medicamentos" class="panel">
+    <div class="panel-head">
+      <div>
+        <h2>Vademécum de consulta</h2>
+        <p>Fármacos frecuentes en medicina general. Puedes filtrar por grupo, buscar o agregar tus propios medicamentos.</p>
+      </div>
+      <button class="btn btn-primary btn-sm" type="button" id="openAddMedModalBtn">+ Agregar fármaco propio</button>
+    </div>
+    <p class="note">⚠️ Nota clínica: las dosis mostradas corresponden a adultos con función renal y hepática conservada; verifica siempre alergias, interacciones y guías vigentes.</p>
+    <div class="grid grid2" style="margin-top:14px">
+      <div class="field"><label>🔎 Buscar fármaco, principio activo o indicación</label><input id="buscarMed" placeholder="Ej. amoxicilina, faringitis, hipertensión..."></div>
+      <div class="field"><label>Filtrar por grupo terapéutico</label>
+        <select id="filtroGrupoMed">
+          <option value="">Todos los grupos</option>
+          <option value="Analgésico / AINE">Analgésico / AINE</option>
+          <option value="Antibiótico">Antibiótico</option>
+          <option value="Cardiovascular">Cardiovascular</option>
+          <option value="Gastrointestinal">Gastrointestinal</option>
+          <option value="Respiratorio / Alergia">Respiratorio / Alergia</option>
+          <option value="Endocrino / Metabólico">Endocrino / Metabólico</option>
+          <option value="Corticoide">Corticoide</option>
+        </select>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Medicamento</th>
+            <th>Grupo</th>
+            <th>Presentación</th>
+            <th>Dosis estándar (adulto)</th>
+            <th>Indicaciones</th>
+            <th>Contraindicaciones</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+        <tbody id="tablaMeds"></tbody>
+      </table>
+    </div>
+    <p class="small" id="contadorMeds" style="margin-top:8px"></p>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- PANEL 7: PEDIATRÍA                                                    -->
+  <!-- ===================================================================== -->
+  <section id="pediatria" class="panel">
+    <div class="panel-head">
+      <div>
+        <h2>Pediatría — Dosificación en mL y Vacunación 2026</h2>
+        <p>Calcula dosis exactas en miligramos y mililitros según la presentación comercial en suspensión, o envíalas directo a la receta.</p>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:22px">
+      <h3>Calculadora pediátrica por peso (mg y mL)</h3>
+      <div class="grid grid3" style="margin-top:12px">
+        <div class="field"><label>Peso del paciente (kg) *</label><input id="pedPeso" type="number" step="0.1" min="1" max="80" placeholder="Ej. 14.5"></div>
+        <div class="field"><label>Medicamento y presentación</label>
+          <select id="pedMed">
+            <option value="para_gotas">Paracetamol Gotas (100 mg / 1 mL)</option>
+            <option value="para_jarabe">Paracetamol Jarabe (160 mg / 5 mL)</option>
+            <option value="ibu_100">Ibuprofeno Suspensión (100 mg / 5 mL)</option>
+            <option value="ibu_200">Ibuprofeno Suspensión (200 mg / 5 mL)</option>
+            <option value="amox_250">Amoxicilina Suspensión (250 mg / 5 mL)</option>
+            <option value="amox_500">Amoxicilina Suspensión (500 mg / 5 mL)</option>
+            <option value="amoxclav_400">Amoxicilina/Clavulanato (400/57 mg / 5 mL)</option>
+            <option value="azitro_200">Azitromicina Suspensión (200 mg / 5 mL)</option>
+            <option value="lora_5">Loratadina Jarabe (5 mg / 5 mL)</option>
+          </select>
+        </div>
+        <div class="field"><label>Esquema / Frecuencia</label><input id="pedFreq" readonly value="Cada 6 a 8 horas"></div>
+      </div>
+      <div class="result" id="pedResult">Captura el peso del niño para obtener los miligramos y mililitros exactos por toma.</div>
+      <div class="actions">
+        <button class="btn btn-primary btn-sm" type="button" id="sendPedToRxBtn" disabled>📝 Pasar esta dosis a la Receta</button>
+      </div>
+    </div>
+
+    <h3>Esquema Nacional de Vacunación — México 2026</h3>
+    <div class="vacc" style="margin:12px 0">
+      <div class="vrow"><b>Al nacer</b><span>BCG (tuberculosis meníngea/miliar) · Hepatitis B (1ª dosis)</span></div>
+      <div class="vrow"><b>2 meses</b><span>Hexavalente acelular (1ª) · Rotavirus (1ª) · Neumocócica conjugada (1ª)</span></div>
+      <div class="vrow"><b>4 meses</b><span>Hexavalente acelular (2ª) · Rotavirus (2ª) · Neumocócica conjugada (2ª)</span></div>
+      <div class="vrow"><b>6 meses</b><span>Hexavalente acelular (3ª) · Rotavirus (3ª, según biológico) · Influenza (1ª dosis, refuerzo al mes y luego anual)</span></div>
+      <div class="vrow"><b>12 meses</b><span>Neumocócica conjugada (refuerzo) · SRP — Sarampión, Rubéola y Parotiditis (1ª dosis)</span></div>
+      <div class="vrow"><b>18 meses</b><span>Hexavalente acelular (refuerzo) · SRP (2ª dosis según cohorte Cartilla Nacional vigente)</span></div>
+      <div class="vrow"><b>4 años</b><span>DPT (refuerzo difteria, tosferina y tétanos)</span></div>
+      <div class="vrow"><b>6 años</b><span>SRP (refuerzo para quienes recibieron esquema previo)</span></div>
+      <div class="vrow"><b>9–11 años / 5º primaria</b><span>VPH — Virus del Papiloma Humano (según lineamiento vigente de campaña nacional)</span></div>
+      <div class="vrow"><b>Embarazo / Adultos</b><span>Tdpa en cada embarazo (semanas 20–32) · Td refuerzo cada 10 años · Influenza anual</span></div>
+    </div>
+    <p class="small">Hexavalente acelular protege contra: Difteria, Tosferina, Tétanos, Poliomielitis, Hepatitis B y <em>Haemophilus influenzae</em> tipo b.</p>
+  </section>
+
+  <footer>Consultorio Médico Pro v4 · Almacenamiento local privado · Compatible con impresión Carta y Media Carta.</footer>
+</div>
+
+<!-- Notificación Toast no intrusiva -->
+<div id="toastMsg" class="toast-msg" role="status" aria-live="polite"></div>
+
+<!-- ======================================================================= -->
+<!-- ÁREA IMPRIMIBLE UNIVERSAL (Receta, Historia, Labs, Certificados, Legal) -->
+<!-- ======================================================================= -->
+<div id="printSheet">
+  <div class="rx-header">
+    <div class="rx-brand">
+      <div class="rx-logo-box" id="prLogoContainer">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M8 6h8"/><path d="M12 6c3 0 5 1.5 5 3.5S14 13 12 13s-5 1.5-5 3.5S9 20 12 20"/><path d="M12 6c-3 0-5 1.5-5 3.5S10 13 12 13s5 1.5 5 3.5S15 20 12 20"/></svg>
+      </div>
+      <div class="rx-doc-info">
+        <h2 id="prDocName">Dr. / Dra. Nombre del Médico</h2>
+        <p id="prDocSub">Médico Cirujano · Cédula Profesional: XXXXXXX</p>
+        <p id="prDocContact">Consultorio Médico · Teléfono y Dirección</p>
+      </div>
+    </div>
+    <div class="rx-meta">
+      <strong id="prDocTitle" style="font-size:14px;color:var(--accent)">RECETA MÉDICA</strong><br>
+      <span id="prFecha"></span>
+    </div>
+  </div>
+
+  <div id="printDynamicContent"></div>
+
+  <div class="rx-footer">
+    <div style="display:flex;align-items:center;gap:12px">
+      <div id="prQrContainer" style="display:none;flex-shrink:0"></div>
+      <div id="prFooterNote">Favor de traer esta receta en su próxima consulta.<br>No se automedique.</div>
+    </div>
+    <div class="rx-sign">
+      <span id="prSignName">Firma y Sello del Médico</span>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CONFIGURAR MEMBRETE Y QR -->
+<dialog id="membreteModal">
+  <h2 style="margin-bottom:6px">Configurar membrete y código QR</h2>
+  <p class="small" style="margin-bottom:14px">Estos datos se guardan automáticamente y aparecerán en tus recetas, órdenes de laboratorio y certificados.</p>
+  <form id="membreteForm">
+    <div class="grid grid2">
+      <div class="field"><label>Nombre completo del médico *</label><input id="mNombre" required placeholder="Dr. Juan Pérez López"></div>
+      <div class="field"><label>Título / Especialidad / Universidad</label><input id="mTitulo" placeholder="Médico Cirujano · Universidad"></div>
+      <div class="field"><label>Cédula Profesional</label><input id="mCedula" placeholder="Céd. Prof. 12345678"></div>
+      <div class="field"><label>Nombre del Consultorio / Clínica</label><input id="mClinica" placeholder="Consultorio Médico General"></div>
+      <div class="field"><label>Teléfono / WhatsApp de citas</label><input id="mTel" placeholder="222 123 4567"></div>
+      <div class="field"><label>Logo del consultorio (PNG/JPG)</label><input id="mLogoFile" type="file" accept="image/*"></div>
+    </div>
+    <div class="field"><label>Dirección completa</label><input id="mDireccion" placeholder="Calle, Número, Colonia, Ciudad, Estado"></div>
+    <div class="grid grid2">
+      <div class="field"><label>URL para Código QR en receta (WhatsApp o Google Maps)</label><input id="mQrUrl" placeholder="Ej. https://wa.me/522221234567"></div>
+      <div class="field" style="display:flex;align-items:center;padding-top:18px">
+        <label style="display:inline-flex;align-items:center;gap:8px;margin:0;cursor:pointer">
+          <input type="checkbox" id="mShowQr" style="width:18px;height:18px;min-height:18px"> Imprimir QR al pie de la receta
+        </label>
+      </div>
+    </div>
+    <div class="actions" style="justify-content:flex-end">
+      <button class="btn btn-danger btn-sm" type="button" id="resetLogoBtn">Quitar logo</button>
+      <button class="btn btn-ghost" type="button" id="closeMembreteBtn">Cancelar</button>
+      <button class="btn btn-primary" type="submit">Guardar membrete</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- MODAL GESTOR VISUAL DE ESQUEMAS TERAPÉUTICOS Y PLANTILLAS -->
+<dialog id="templatesModal">
+  <h2 style="margin-bottom:6px">Gestor Visual de Esquemas y Plantillas</h2>
+  <p class="small" style="margin-bottom:14px">Crea o administra tus propios esquemas terapéuticos rápidos (1 clic en Receta) y bloques de exploración física o signos de alarma.</p>
+
+  <div class="card" style="margin-bottom:16px">
+    <h3 style="margin-bottom:10px;color:var(--accent-dark)">1. Agregar nuevo Esquema Terapéutico Rápido</h3>
+    <form id="newKitForm">
+      <div class="grid grid2">
+        <div class="field"><label>Nombre del botón (ej. Otitis Externa) *</label><input id="nkLabel" required placeholder="Ej. Otitis Externa Aguda"></div>
+        <div class="field"><label>Diagnóstico clínico en receta *</label><input id="nkDx" required placeholder="Ej. Otitis externa aguda derecha"></div>
+      </div>
+      <div class="field">
+        <label>Medicamentos del esquema (1 por línea: Fármaco | Dosis | Frecuencia | Duración) *</label>
+        <textarea id="nkMeds" required placeholder="Ciprofloxacino/Hidrocortisona ótico | Aplicar 3 gotas en oído afectado | Cada 12 horas | Durante 7 días&#10;Ibuprofeno Tabletas 400 mg | Tomar 1 tableta vía oral con alimentos | Cada 8 horas | Durante 4 días"></textarea>
+      </div>
+      <div class="field">
+        <label>Indicaciones y signos de alarma</label>
+        <textarea id="nkInd" placeholder="• Evitar entrada de agua al oído durante el baño.&#10;• No introducir cotonetes ni objetos."></textarea>
+      </div>
+      <button class="btn btn-primary btn-sm" type="submit">+ Guardar Esquema Terapéutico</button>
+    </form>
+  </div>
+
+  <div class="card" style="margin-bottom:16px">
+    <h3 style="margin-bottom:8px">Esquemas personalizados guardados</h3>
+    <div id="customKitsList" class="small">Sin esquemas personalizados todavía.</div>
+  </div>
+
+  <div class="card" style="margin-bottom:14px">
+    <h3 style="margin-bottom:10px;color:var(--accent-dark)">2. Agregar plantilla rápida (Exploración Física o Signos de Alarma)</h3>
+    <form id="newSnippetForm">
+      <div class="grid grid2">
+        <div class="field"><label>Destino del botón</label>
+          <select id="nsType">
+            <option value="ef">Historia/SOAP → Exploración Física</option>
+            <option value="alarm">Receta → Indicaciones / Signos de Alarma</option>
+          </select>
+        </div>
+        <div class="field"><label>Etiqueta corta del botón *</label><input id="nsLabel" required placeholder="Ej. Exploración ORL pediátrica"></div>
+      </div>
+      <div class="field"><label>Texto clínico a insertar *</label><textarea id="nsText" required placeholder="Texto completo que se insertará al presionar el botón..."></textarea></div>
+      <button class="btn btn-secondary btn-sm" type="submit">+ Guardar Plantilla Rápida</button>
+    </form>
+    <div id="customSnippetsList" class="small" style="margin-top:10px"></div>
+  </div>
+
+  <div class="actions" style="justify-content:flex-end">
+    <button class="btn btn-primary" type="button" id="closeTemplatesBtn">Listo / Cerrar</button>
+  </div>
+</dialog>
+
+<!-- MODAL AGREGAR MEDICAMENTO -->
+<dialog id="addMedModal">
+  <h2 style="margin-bottom:6px">Agregar fármaco al vademécum</h2>
+  <p class="small" style="margin-bottom:14px">Se guardará en tu base personal para usarlo rápido en futuras recetas.</p>
+  <form id="addMedForm">
+    <div class="grid grid2">
+      <div class="field"><label>Nombre comercial / genérico *</label><input id="nmNombre" required placeholder="Ej. Cefalexina"></div>
+      <div class="field"><label>Grupo terapéutico</label>
+        <select id="nmGrupo">
+          <option value="Antibiótico">Antibiótico</option>
+          <option value="Analgésico / AINE">Analgésico / AINE</option>
+          <option value="Cardiovascular">Cardiovascular</option>
+          <option value="Gastrointestinal">Gastrointestinal</option>
+          <option value="Respiratorio / Alergia">Respiratorio / Alergia</option>
+          <option value="Endocrino / Metabólico">Endocrino / Metabólico</option>
+          <option value="Corticoide">Corticoide</option>
+        </select>
+      </div>
+      <div class="field"><label>Presentación *</label><input id="nmPres" required placeholder="Cápsulas 500 mg"></div>
+      <div class="field"><label>Dosis estándar adulto *</label><input id="nmDosis" required placeholder="500 mg VO cada 8 h por 7 días"></div>
+    </div>
+    <div class="field"><label>Indicaciones principales</label><input id="nmInd" placeholder="Infecciones de piel y tejidos blandos, faringitis"></div>
+    <div class="field"><label>Contraindicaciones</label><input id="nmContra" placeholder="Alergia a cefalosporinas"></div>
+    <div class="actions" style="justify-content:flex-end">
+      <button class="btn btn-ghost" type="button" id="closeAddMedBtn">Cancelar</button>
+      <button class="btn btn-primary" type="submit">Guardar medicamento</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+(function() {
+  // === UTILIDAD TOAST (SIN ALERT/CONFIRM INTRUSIVOS) ===
+  let toastTimer = null;
+  function showToast(msg) {
+    const el = document.getElementById("toastMsg");
+    el.textContent = msg;
+    el.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove("show"), 3200);
+  }
+
+  // === GENERADOR QR SVG AUTOCONTENIDO (Version 3, 29x29, Byte mode, ECC L) ===
+  function generateQrSvg(text, sizePx = 68) {
+    if (!text) return "";
+    const bytes = new TextEncoder().encode(text.slice(0, 52));
+    const size = 29, dataCodewords = 55, eccCodewords = 15;
+    const GF_EXP = new Uint8Array(512), GF_LOG = new Uint8Array(256);
+    let x = 1;
+    for (let i = 0; i < 255; i++) {
+      GF_EXP[i] = x; GF_LOG[x] = i;
+      x <<= 1; if (x & 0x100) x ^= 0x11d;
+    }
+    for (let i = 255; i < 512; i++) GF_EXP[i] = GF_EXP[i - 255];
+    const gfMul = (a, b) => (a === 0 || b === 0) ? 0 : GF_EXP[GF_LOG[a] + GF_LOG[b]];
+    let gen = [1];
+    for (let i = 0; i < eccCodewords; i++) {
+      const next = new Array(gen.length + 1).fill(0);
+      for (let j = 0; j < gen.length; j++) {
+        next[j] ^= gen[j];
+        next[j + 1] ^= gfMul(gen[j], GF_EXP[i]);
+      }
+      gen = next;
+    }
+    const bits = [];
+    const pushBits = (val, len) => { for (let i = len - 1; i >= 0; i--) bits.push((val >> i) & 1); };
+    pushBits(4, 4);
+    pushBits(bytes.length, 8);
+    bytes.forEach(b => pushBits(b, 8));
+    pushBits(0, Math.min(4, dataCodewords * 8 - bits.length));
+    while (bits.length % 8 !== 0) bits.push(0);
+    const cw = [];
+    for (let i = 0; i < bits.length; i += 8) {
+      let b = 0; for (let j = 0; j < 8; j++) b = (b << 1) | bits[i + j];
+      cw.push(b);
+    }
+    const pads = [0xec, 0x11]; let pIdx = 0;
+    while (cw.length < dataCodewords) { cw.push(pads[pIdx % 2]); pIdx++; }
+    const rem = new Array(eccCodewords).fill(0);
+    for (let i = 0; i < cw.length; i++) {
+      const factor = cw[i] ^ rem[0];
+      rem.shift(); rem.push(0);
+      for (let j = 0; j < eccCodewords; j++) rem[j] ^= gfMul(gen[j + 1], factor);
+    }
+    const allCw = cw.concat(rem);
+    const allBits = [];
+    allCw.forEach(b => { for (let i = 7; i >= 0; i--) allBits.push((b >> i) & 1); });
+
+    const grid = Array.from({ length: size }, () => new Array(size).fill(null));
+    const isFunc = Array.from({ length: size }, () => new Array(size).fill(false));
+    const setMod = (r, c, v, fn = true) => {
+      if (r >= 0 && r < size && c >= 0 && c < size) { grid[r][c] = v ? 1 : 0; if (fn) isFunc[r][c] = true; }
+    };
+    const drawFinder = (r0, c0) => {
+      for (let r = -1; r <= 7; r++) for (let c = -1; c <= 7; c++) {
+        const inOuter = r >= 0 && r <= 6 && c >= 0 && c <= 6;
+        const onBorder = r === 0 || r === 6 || c === 0 || c === 6;
+        const inCore = r >= 2 && r <= 4 && c >= 2 && c <= 4;
+        setMod(r0 + r, c0 + c, inOuter && (onBorder || inCore), true);
+      }
+    };
+    drawFinder(0, 0); drawFinder(0, size - 7); drawFinder(size - 7, 0);
+    for (let r = -2; r <= 2; r++) for (let c = -2; c <= 2; c++) {
+      setMod(22 + r, 22 + c, Math.max(Math.abs(r), Math.abs(c)) !== 1, true);
+    }
+    for (let i = 8; i < size - 8; i++) {
+      setMod(6, i, i % 2 === 0, true);
+      setMod(i, 6, i % 2 === 0, true);
+    }
+    setMod(size - 8, 8, 1, true);
+    for (let i = 0; i < 9; i++) { isFunc[8][i] = true; isFunc[i][8] = true; }
+    for (let i = 0; i < 8; i++) { isFunc[8][size - 1 - i] = true; isFunc[size - 1 - i][8] = true; }
+
+    let bitIdx = 0, up = true;
+    for (let right = size - 1; right >= 1; right -= 2) {
+      if (right === 6) right = 5;
+      for (let vert = 0; vert < size; vert++) {
+        const r = up ? size - 1 - vert : vert;
+        for (let lr = 0; lr < 2; lr++) {
+          const c = right - lr;
+          if (!isFunc[r][c]) {
+            const rawBit = bitIdx < allBits.length ? allBits[bitIdx++] : 0;
+            const masked = ((r + c) % 2 === 0) ? (rawBit ^ 1) : rawBit;
+            grid[r][c] = masked;
+          }
+        }
+      }
+      up = !up;
+    }
+    const fmtBits = 0x77c4;
+    for (let i = 0; i <= 5; i++) setMod(8, i, (fmtBits >> (14 - i)) & 1, true);
+    setMod(8, 7, (fmtBits >> 8) & 1, true);
+    setMod(8, 8, (fmtBits >> 7) & 1, true);
+    setMod(7, 8, (fmtBits >> 6) & 1, true);
+    for (let i = 0; i <= 5; i++) setMod(5 - i, 8, (fmtBits >> i) & 1, true);
+    for (let i = 0; i <= 7; i++) setMod(size - 1 - i, 8, (fmtBits >> (14 - i)) & 1, true);
+    for (let i = 0; i <= 6; i++) setMod(8, size - 7 + i, (fmtBits >> (6 - i)) & 1, true);
+
+    let rects = "";
+    for (let r = 0; r < size; r++) {
+      for (let c = 0; c < size; c++) {
+        if (grid[r][c] === 1) rects += `<rect x="${c + 2}" y="${r + 2}" width="1" height="1"/>`;
+      }
+    }
+    return `<svg width="${sizePx}" height="${sizePx}" viewBox="0 0 ${size + 4} ${size + 4}" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect width="100%" height="100%" fill="#ffffff"/><g fill="#0f172a">${rects}</g></svg>`;
+  }
+
+  // === BASE DE MEDICAMENTOS ===
+  const DEFAULT_MEDS = [
+    {n:"Paracetamol",g:"Analgésico / AINE",pres:"Tabletas 500 mg / 1 g",dosis:"500 mg–1 g VO cada 6–8 h (máx. 4 g/día)",ind:"Fiebre, dolor leve a moderado",contra:"Insuficiencia hepática grave"},
+    {n:"Ibuprofeno",g:"Analgésico / AINE",pres:"Tabletas 400 / 600 mg",dosis:"400 mg VO cada 6–8 h con alimentos (máx. 2.4 g/día)",ind:"Dolor, inflamación, fiebre",contra:"Úlcera péptica activa, ERC, 3er trimestre embarazo"},
+    {n:"Naproxeno",g:"Analgésico / AINE",pres:"Tabletas 250 / 500 mg",dosis:"500 mg VO cada 12 h con alimentos",ind:"Dolor musculoesquelético, odontalgia, dismenorrea",contra:"Úlcera activa, sangrado GI, ERC grave"},
+    {n:"Ketorolaco",g:"Analgésico / AINE",pres:"Tabletas 10 mg / Ámpula 30 mg",dosis:"10 mg VO cada 6 h (máx. 5 días)",ind:"Dolor agudo moderado a intenso",contra:"Úlcera péptica, insuficiencia renal, embarazo"},
+    {n:"Diclofenaco",g:"Analgésico / AINE",pres:"Tabletas 100 mg / Gel",dosis:"100 mg VO cada 24 h o 50 mg cada 12 h",ind:"Lumbalgia, artritis, traumatismos",contra:"Cardiopatía isquémica grave, úlcera activa"},
+    {n:"Celecoxib",g:"Analgésico / AINE",pres:"Cápsulas 200 mg",dosis:"200 mg VO cada 12–24 h",ind:"Osteoartritis, dolor inflamatorio con riesgo GI",contra:"Alergia a sulfonamidas, cardiopatía isquémica"},
+    {n:"Amoxicilina",g:"Antibiótico",pres:"Cápsulas 500 mg",dosis:"500 mg VO cada 8 h por 7–10 días",ind:"Faringoamigdalitis, otitis media aguda, sinusitis",contra:"Alergia a penicilinas"},
+    {n:"Amoxicilina-Clavulanato",g:"Antibiótico",pres:"Tabletas 500/125 mg o 875/125 mg",dosis:"875/125 mg VO cada 12 h por 7–10 días",ind:"Sinusitis bacteriana, otitis, mordeduras, infección odontogénica",contra:"Alergia a penicilinas, hepatotoxicidad previa por clavulanato"},
+    {n:"Azitromicina",g:"Antibiótico",pres:"Tabletas 500 mg",dosis:"500 mg VO cada 24 h por 3–5 días",ind:"Infecciones respiratorias, alternativa en alergia a betalactámicos",contra:"Prolongación del QT, hipersensibilidad a macrólidos"},
+    {n:"Claritromicina",g:"Antibiótico",pres:"Tabletas 500 mg",dosis:"500 mg VO cada 12 h por 7–14 días",ind:"Neumonía atípica, sinusitis, erradicación de H. pylori",contra:"Interacciones CYP3A4, QT prolongado"},
+    {n:"Cefalexina",g:"Antibiótico",pres:"Cápsulas 500 mg",dosis:"500 mg VO cada 6–8 h por 7 días",ind:"Infecciones de piel y tejidos blandos, faringitis",contra:"Alergia grave a betalactámicos"},
+    {n:"Ceftriaxona",g:"Antibiótico",pres:"Ámpula 1 g IM / IV",dosis:"1 g IM cada 24 h por 3–5 días",ind:"Neumonía, pielonefritis, infecciones moderadas-graves",contra:"Alergia grave a cefalosporinas"},
+    {n:"Ciprofloxacino",g:"Antibiótico",pres:"Tabletas 500 mg",dosis:"500 mg VO cada 12 h por 5–7 días",ind:"ITU complicada, gastroenteritis bacteriana seleccionada",contra:"Embarazo, menores de 18 años, tendinopatía"},
+    {n:"Nitrofurantoína",g:"Antibiótico",pres:"Cápsulas 100 mg",dosis:"100 mg VO cada 12 h con alimentos por 5–7 días",ind:"Cistitis aguda no complicada",contra:"TFG < 30 mL/min, embarazo a término (38–42 SDG)"},
+    {n:"Metronidazol",g:"Antibiótico",pres:"Tabletas 500 mg",dosis:"500 mg VO cada 8 h por 7 días",ind:"Amebiasis, giardiasis, vaginosis bacteriana, anaerobios",contra:"Ingesta de alcohol (efecto antabús), 1er trimestre embarazo"},
+    {n:"Omeprazol",g:"Gastrointestinal",pres:"Cápsulas 20 mg",dosis:"20 mg VO cada 24 h 30 min antes del desayuno",ind:"ERGE, gastritis, úlcera péptica",contra:"Hipersensibilidad; vigilar B12 y Mg en uso crónico"},
+    {n:"Pantoprazol",g:"Gastrointestinal",pres:"Tabletas 40 mg",dosis:"40 mg VO cada 24 h en ayuno",ind:"ERGE erosiva, esofagitis, gastroprotección",contra:"Hipersensibilidad a benzimidazoles"},
+    {n:"Famotidina",g:"Gastrointestinal",pres:"Tabletas 40 mg",dosis:"40 mg VO cada 24 h por la noche",ind:"Dispepsia, ERGE leve",contra:"Ajustar dosis en insuficiencia renal"},
+    {n:"Ondansetrón",g:"Gastrointestinal",pres:"Tabletas 8 mg / Ámpula 8 mg",dosis:"8 mg VO cada 8–12 h según náusea",ind:"Náusea y vómito agudo",contra:"Síndrome de QT largo congénito"},
+    {n:"Butilhioscina",g:"Gastrointestinal",pres:"Grageas 10 mg",dosis:"10–20 mg VO cada 8 h en caso de cólico",ind:"Dolor espasmódico gastrointestinal o biliar",contra:"Glaucoma de ángulo cerrado, megacolon, retención urinaria"},
+    {n:"Loperamida",g:"Gastrointestinal",pres:"Cápsulas 2 mg",dosis:"4 mg inicial, luego 2 mg tras cada evacuación (máx. 16 mg/día)",ind:"Diarrea aguda no infecciosa",contra:"Disentería (fiebre o sangre en heces), menores de 6 años"},
+    {n:"Loratadina",g:"Respiratorio / Alergia",pres:"Tabletas 10 mg",dosis:"10 mg VO cada 24 h",ind:"Rinitis alérgica, urticaria",contra:"Hipersensibilidad"},
+    {n:"Cetirizina",g:"Respiratorio / Alergia",pres:"Tabletas 10 mg",dosis:"10 mg VO cada 24 h",ind:"Rinitis alérgica, prurito, urticaria",contra:"Insuficiencia renal terminal"},
+    {n:"Salbutamol",g:"Respiratorio / Alergia",pres:"Inhalador 100 µg/dosis",dosis:"2 inhalaciones cada 4–6 h por razón necesaria",ind:"Crisis asmática, broncoespasmo, EPOC",contra:"Precaución en taquiarritmias e hipertiroidismo"},
+    {n:"Budesonida Nasal",g:"Respiratorio / Alergia",pres:"Spray nasal 64 µg/dosis",dosis:"1–2 disparos en cada fosa nasal cada 12–24 h",ind:"Rinitis alérgica moderada-grave, rinosinusitis",contra:"Infección nasal fúngica o viral no tratada"},
+    {n:"Losartán",g:"Cardiovascular",pres:"Tabletas 50 / 100 mg",dosis:"50 mg VO cada 24 h (máx. 100 mg/día)",ind:"Hipertensión arterial sistémica, nefroprotección en DM2",contra:"Embarazo, hiperkalemia, estenosis bilateral arteria renal"},
+    {n:"Telmisartán",g:"Cardiovascular",pres:"Tabletas 40 / 80 mg",dosis:"40–80 mg VO cada 24 h",ind:"Hipertensión arterial sistémica",contra:"Embarazo, colestasis biliar"},
+    {n:"Amlodipino",g:"Cardiovascular",pres:"Tabletas 5 / 10 mg",dosis:"5 mg VO cada 24 h (máx. 10 mg/día)",ind:"Hipertensión arterial, angina estable",contra:"Hipotensión grave, choque cardiogénico"},
+    {n:"Captopril",g:"Cardiovascular",pres:"Tabletas 25 mg",dosis:"25 mg VO dosis única o cada 8–12 h",ind:"Hipertensión arterial, urgencia hipertensiva leve",contra:"Embarazo, angioedema previo, hiperkalemia"},
+    {n:"Hidroclorotiazida",g:"Cardiovascular",pres:"Tabletas 25 mg",dosis:"12.5–25 mg VO cada 24 h por la mañana",ind:"Hipertensión arterial, edema leve",contra:"Anuria, hipokalemia refractaria, alergia a sulfas"},
+    {n:"Metformina",g:"Endocrino / Metabólico",pres:"Tabletas 500 / 850 mg",dosis:"850 mg VO cada 12–24 h con alimentos",ind:"Diabetes mellitus tipo 2",contra:"TFG < 30 mL/min, acidosis metabólica, hipoxia tisular"},
+    {n:"Atorvastatina",g:"Endocrino / Metabólico",pres:"Tabletas 20 / 40 mg",dosis:"20 mg VO cada 24 h por la noche",ind:"Dislipidemia, prevención cardiovascular",contra:"Hepatopatía activa, embarazo y lactancia"},
+    {n:"Levotiroxina",g:"Endocrino / Metabólico",pres:"Tabletas 100 µg",dosis:"100 µg VO cada 24 h en ayuno estricto (ajustar por TSH)",ind:"Hipotiroidismo primario o central",contra:"Tirotoxicosis no tratada, IAM reciente"},
+    {n:"Prednisona",g:"Corticoide",pres:"Tabletas 5 / 20 / 50 mg",dosis:"20–50 mg VO cada 24 h por la mañana (esquema de reducción)",ind:"Exacerbación de asma, alergias graves, procesos inflamatorios",contra:"Infección sistémica no controlada; no suspender de golpe en uso >2 sem"},
+    {n:"Dexametasona",g:"Corticoide",pres:"Tabletas 4 mg / Ámpula 8 mg",dosis:"4–8 mg VO/IM dosis única o ciclo corto",ind:"Crup, edema de vía aérea, alergia aguda grave",contra:"Infección fúngica sistémica, precaución en DM2 descontrolada"}
+  ];
+
+  // === ESQUEMAS TERAPÉUTICOS PRECARGADOS (9 KITS) ===
+  const DEFAULT_KITS = [
+    {
+      id: "faringo",
+      label: "Faringoamigdalitis bacteriana",
+      dx: "Faringoamigdalitis aguda bacteriana",
+      meds: [
+        { name: "Amoxicilina-Clavulanato — Tabletas 875/125 mg", dosis: "Tomar 1 tableta vía oral", freq: "Cada 12 horas", dur: "Durante 7 días" },
+        { name: "Ibuprofeno — Tabletas 400 mg", dosis: "Tomar 1 tableta vía oral con alimentos", freq: "Cada 8 horas", dur: "Durante 4 días" }
+      ],
+      ind: "• Abundantes líquidos tibios y reposo vocal.\n• Completar los 7 días de antibiótico.\n• Signos de alarma: dificultad para tragar saliva o respirar, fiebre >38.5 °C persistente."
+    },
+    {
+      id: "gepi",
+      label: "Gastroenteritis aguda",
+      dx: "Gastroenteritis aguda probablemente infecciosa",
+      meds: [
+        { name: "Vida Suero Oral (Sobres)", dosis: "Disolver 1 sobre en 1 L de agua hervida/purificada; tomar a libre demanda", freq: "Posterior a cada evacuación o vómito", dur: "Mientras persistan pérdidas" },
+        { name: "Ondansetrón — Tabletas 8 mg", dosis: "Tomar 1 tableta vía oral", freq: "Cada 8 horas en caso de náusea o vómito", dur: "Durante 2 días" },
+        { name: "Butilhioscina — Grageas 10 mg", dosis: "Tomar 1 gragea vía oral", freq: "Cada 8 horas en caso de dolor cólico", dur: "Durante 3 días" }
+      ],
+      ind: "• Dieta astringente sin lácteos, grasas, café ni irritantes.\n• Signos de alarma: boca seca, llanto sin lágrimas, sangre en heces o intolerancia total a líquidos."
+    },
+    {
+      id: "lumbalgia",
+      label: "Lumbalgia mecánica aguda",
+      dx: "Lumbalgia mecánica aguda",
+      meds: [
+        { name: "Naproxeno — Tabletas 500 mg", dosis: "Tomar 1 tableta vía oral con alimentos", freq: "Cada 12 horas", dur: "Durante 5 días" },
+        { name: "Paracetamol — Tabletas 500 mg", dosis: "Tomar 1 tableta vía oral", freq: "Cada 8 horas", dur: "Durante 5 días" }
+      ],
+      ind: "• Calor local húmedo por 15 minutos 3 veces al día. Evitar cargar objetos pesados.\n• Signos de alarma: pérdida de fuerza o adormecimiento en piernas, alteración para orinar."
+    },
+    {
+      id: "ivu",
+      label: "Cistitis aguda (IVU baja)",
+      dx: "Infección de vías urinarias bajas (Cistitis aguda)",
+      meds: [
+        { name: "Nitrofurantoína — Cápsulas 100 mg", dosis: "Tomar 1 cápsula vía oral con alimentos", freq: "Cada 12 horas", dur: "Durante 5 días" },
+        { name: "Paracetamol — Tabletas 500 mg", dosis: "Tomar 1 tableta vía oral", freq: "Cada 8 horas si hay molestia", dur: "Durante 3 días" }
+      ],
+      ind: "• Ingesta de 2 a 2.5 litros de agua natural al día. No aguantar ganas de orinar.\n• Signos de alarma: fiebre, escalofríos, dolor en espalda baja (fosa renal) o vómito."
+    },
+    {
+      id: "rinitis",
+      label: "Rinitis alérgica / Cuadro viral",
+      dx: "Rinitis alérgica / Rinofaringitis aguda",
+      meds: [
+        { name: "Loratadina — Tabletas 10 mg", dosis: "Tomar 1 tableta vía oral", freq: "Cada 24 horas", dur: "Durante 7 días" },
+        { name: "Budesonida Nasal — Spray 64 µg/dosis", dosis: "Aplicar 2 disparos en cada fosa nasal", freq: "Cada 12 horas", dur: "Durante 14 días" },
+        { name: "Paracetamol — Tabletas 500 mg", dosis: "Tomar 1 tableta vía oral en caso de dolor o fiebre", freq: "Cada 8 horas", dur: "Por razón necesaria" }
+      ],
+      ind: "• Lavados nasales con solución salina isotónica antes del spray nasal.\n• Evitar cambios bruscos de temperatura y exposición a polvo/humo."
+    },
+    {
+      id: "oma",
+      label: "Otitis media aguda",
+      dx: "Otitis media aguda no complicada",
+      meds: [
+        { name: "Amoxicilina — Cápsulas 500 mg", dosis: "Tomar 1 cápsula vía oral", freq: "Cada 8 horas", dur: "Durante 7 días" },
+        { name: "Ibuprofeno — Tabletas 400 mg", dosis: "Tomar 1 tableta vía oral con alimentos", freq: "Cada 8 horas", dur: "Durante 4 días" }
+      ],
+      ind: "• No aplicar gotas óticas sin valoración previa de integridad timpánica. Evitar entrada de agua al oído.\n• Signos de alarma: enrojecimiento o aumento de volumen detrás de la oreja, vértigo intenso o fiebre persistente."
+    },
+    {
+      id: "sinusitis",
+      label: "Sinusitis bacteriana aguda",
+      dx: "Rinosinusitis bacteriana aguda",
+      meds: [
+        { name: "Amoxicilina-Clavulanato — Tabletas 875/125 mg", dosis: "Tomar 1 tableta vía oral con alimentos", freq: "Cada 12 horas", dur: "Durante 7 a 10 días" },
+        { name: "Budesonida Nasal — Spray 64 µg/dosis", dosis: "Aplicar 2 disparos en cada fosa nasal", freq: "Cada 12 horas", dur: "Durante 14 días" },
+        { name: "Paracetamol — Tabletas 500 mg", dosis: "Tomar 1 tableta vía oral", freq: "Cada 8 horas en caso de dolor facial/cefalea", dur: "Durante 4 días" }
+      ],
+      ind: "• Lavados nasales con solución fisiológica 3 veces al día e hidratación abundante.\n• Signos de alarma: edema periorbitario, alteraciones visuales, cefalea intensa o fiebre >38.5 °C."
+    },
+    {
+      id: "gastritis",
+      label: "Gastritis / ERGE aguda",
+      dx: "Enfermedad por reflujo gastroesofágico / Gastritis aguda",
+      meds: [
+        { name: "Omeprazol — Cápsulas 20 mg", dosis: "Tomar 1 cápsula vía oral 30 minutos antes del desayuno", freq: "Cada 24 horas", dur: "Durante 14 a 28 días" },
+        { name: "Famotidina — Tabletas 40 mg", dosis: "Tomar 1 tableta vía oral", freq: "Cada 24 horas por la noche", dur: "Durante 14 días" }
+      ],
+      ind: "• Evitar café, refrescos, irritantes, picante, grasas, alcohol y tabaco. Cenar 2 horas antes de acostarse.\n• Signos de alarma: vómito con sangre o material oscuro, evacuaciones negras (melena) o pérdida de peso."
+    },
+    {
+      id: "hta_urg",
+      label: "Crisis hipertensiva leve",
+      dx: "Descontrol hipertensivo sin daño a órgano blanco",
+      meds: [
+        { name: "Captopril — Tabletas 25 mg", dosis: "Tomar 1 tableta vía oral (no sublingual)", freq: "Dosis única en consultorio; revalorar TA en 30–45 min", dur: "Dosis supervisada" },
+        { name: "Losartán — Tabletas 50 mg", dosis: "Tomar 1 tableta vía oral (ajuste de mantenimiento)", freq: "Cada 24 horas", dur: "Tratamiento continuo" }
+      ],
+      ind: "• Bitácora diaria de presión arterial mañana y noche. Dieta hiposódica.\n• Signos de alarma: dolor opresivo en pecho, falta de aire, cefalea intensa, visión borrosa o debilidad focal (acudir a Urgencias)."
+    }
+  ];
+
+  // === BLOQUES PRECARGADOS DE EXPLORACIÓN FÍSICA Y SIGNOS DE ALARMA ===
+  const DEFAULT_EF_CHIPS = [
+    {
+      label: "+ Normalidad general",
+      text: "Paciente consciente, orientado en 3 esferas, hidratado, buena coloración de tegumentos. Cráneo y cuello sin adenomegalias ni ingurgitación yugular. Tórax simétrico con campos pulmonares bien ventilados sin estertores ni sibilancias; ruidos cardíacos rítmicos de buen tono e intensidad sin soplos. Abdomen blando, depresible, no doloroso a la palpación, peristalsis presente normal. Extremidades íntegras, eutróficas, sin edema, pulsos distales presentes."
+    },
+    {
+      label: "+ Exploración ORL completa",
+      text: "ORL: Pabellones auriculares bien implantados. Otoscopia bilateral: conductos auditivos externos permeables, membranas timpánicas íntegras, nacaradas, con cono luminoso conservado sin abombamiento ni niveles hidroaéreos. Rinoscopia anterior: mucosa nasal rosada, septum central, cornetes eutróficos sin rinorrea purulenta. Cavidad oral y faringoscopia: mucosa oral hidratada, pilares anteriores y pared posterior faríngea sin exudados, amígdalas grado I sin hipertrofia ni hiperemia. Cuello sin adenomegalias cervicales."
+    },
+    {
+      label: "+ Cardiopulmonar normal",
+      text: "Tórax normolíneo con movimientos de amplexión y amplexación simétricos. Murmullo vesicular presente bilateral, sin estertores, sibilancias ni frote pleural. Área precordial rítmica, frecuencia cardíaca regular, sin soplos, galope ni desdoblamientos patológicos."
+    },
+    {
+      label: "+ Abdomen normal",
+      text: "Abdomen plano, blando, depresible, indoloro a la palpación superficial y profunda, sin visceromegalias ni masas palpables. Signos de Murphy, McBurney y Blumberg negativos. Ruidos peristálticos presentes y normoactivos."
+    },
+    {
+      label: "+ Neurológico básico",
+      text: "Alerta, orientado en persona, tiempo y espacio (Glasgow 15/15). Pupilas isocóricas normorreflécticas. Pares craneales íntegros. Fuerza muscular 5/5 en las 4 extremidades, sensibilidad conservada, reflejos osteotendinosos ++/++++ simétricos, marcha estable sin datos de focalización."
+    }
+  ];
+
+  const DEFAULT_ALARM_CHIPS = [
+    { label: "+ Dieta blanda e hidratación", text: "Hidratación abundante con líquidos claros y Vida Suero Oral. Dieta blanda sin irritantes, lácteos ni grasas." },
+    { label: "+ Signos de alarma", text: "Signos de alarma: fiebre >38.5 °C persistente, dificultad para respirar, dolor intenso o intolerancia a la vía oral. Acudir a valoración de inmediato." },
+    { label: "+ Apego a antibiótico", text: "Completar los días indicados de antibiótico aunque desaparezcan los síntomas antes." },
+    { label: "+ Cita en 7 días", text: "Cita de control y valoración de evolución en 7 días." }
+  ];
+
+  // === ESTADO Y MIGRACIÓN AUTOMÁTICA V2 / V3 -> V4 ===
+  const STORAGE_KEY = "consultorio_medico_pro_v4";
+  const LEGACY_KEYS = ["consultorio_medico_pro_v3", "consultorio_medico_pro_v2"];
+  let state = {
+    membrete: {
+      nombre: "Dr. / Dra. Nombre del Médico",
+      titulo: "Médico Cirujano · Universidad",
+      cedula: "Céd. Prof. XXXXXXX",
+      clinica: "Consultorio Médico General",
+      tel: "Tel. 222 000 0000",
+      direccion: "Dirección del Consultorio, Ciudad, Estado",
+      logoDataUrl: "",
+      qrUrl: "",
+      showQr: false
+    },
+    consultas: [],
+    historias: [],
+    customMeds: [],
+    customKits: [],
+    customEfChips: [],
+    customAlarmChips: [],
+    theme: "teal",
+    darkMode: false,
+    wardMode: false
+  };
+
+  function loadState() {
+    try {
+      let raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) {
+        for (const key of LEGACY_KEYS) {
+          raw = localStorage.getItem(key);
+          if (raw) break;
+        }
+      }
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        state = {
+          ...state,
+          ...parsed,
+          membrete: { ...state.membrete, ...(parsed.membrete || {}) },
+          customKits: parsed.customKits || [],
+          customEfChips: parsed.customEfChips || [],
+          customAlarmChips: parsed.customAlarmChips || []
+        };
+      }
+    } catch (e) { console.warn("Error leyendo almacenamiento local:", e); }
+  }
+
+  function saveState() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      updateDashboardStats();
+    } catch (e) {
+      showToast("⚠️ Almacenamiento lleno. Usa un logo más ligero o exporta respaldo.");
+    }
+  }
+
+  function getAllMeds() {
+    return [...DEFAULT_MEDS, ...(state.customMeds || [])];
+  }
+
+  function getAllKits() {
+    return [...DEFAULT_KITS, ...(state.customKits || [])];
+  }
+
+  // === TEMA, MODO PASE DE VISITA Y MEMBRETE ===
+  function applyTheme() {
+    document.documentElement.setAttribute("data-theme", state.theme || "teal");
+    document.getElementById("themeSelect").value = state.theme || "teal";
+    if (state.darkMode) document.documentElement.setAttribute("data-mode", "dark");
+    else document.documentElement.removeAttribute("data-mode");
+    document.body.classList.toggle("ward-mode", !!state.wardMode);
+  }
+
+  function applyMembreteUI() {
+    const m = state.membrete;
+    document.getElementById("heroClinicBadge").textContent = `${m.clinica} · ${m.cedula}`;
+    document.getElementById("heroTitle").textContent = m.clinica || "Consultorio Médico Pro v4";
+    document.getElementById("prDocName").textContent = m.nombre;
+    document.getElementById("prDocSub").textContent = `${m.titulo} · ${m.cedula}`;
+    document.getElementById("prDocContact").textContent = `${m.clinica} · ${m.direccion} · ${m.tel}`;
+    document.getElementById("prSignName").textContent = `${m.nombre}\n${m.cedula}`;
+
+    const logoBox = document.getElementById("prLogoContainer");
+    if (m.logoDataUrl) {
+      logoBox.innerHTML = `<img src="${m.logoDataUrl}" alt="Logo">`;
+    } else {
+      logoBox.innerHTML = `<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M8 6h8"/><path d="M12 6c3 0 5 1.5 5 3.5S14 13 12 13s-5 1.5-5 3.5S9 20 12 20"/><path d="M12 6c-3 0-5 1.5-5 3.5S10 13 12 13s5 1.5 5 3.5S15 20 12 20"/></svg>`;
+    }
+
+    const qrBox = document.getElementById("prQrContainer");
+    if (m.showQr && m.qrUrl) {
+      qrBox.innerHTML = generateQrSvg(m.qrUrl, 66);
+      qrBox.style.display = "block";
+    } else {
+      qrBox.innerHTML = "";
+      qrBox.style.display = "none";
+    }
+  }
+
+  function updateDashboardStats() {
+    document.getElementById("statConsultas").textContent = state.consultas.length;
+    document.getElementById("statHistorias").textContent = state.historias.length;
+    const today = new Date().toISOString().slice(0, 10);
+    const upcoming = state.consultas.filter(c => c.cita && c.cita >= today).length;
+    document.getElementById("statCitas").textContent = upcoming;
+    const totalIngresos = state.consultas.reduce((acc, c) => acc + (parseFloat(c.costo) || 0), 0);
+    document.getElementById("statIngresos").textContent = `$${totalIngresos.toLocaleString("es-MX")}`;
+  }
+
+  loadState();
+  applyTheme();
+  applyMembreteUI();
+  updateDashboardStats();
+
+  document.getElementById("themeSelect").addEventListener("change", (e) => {
+    state.theme = e.target.value; applyTheme(); saveState();
+  });
+  document.getElementById("toggleDarkBtn").addEventListener("click", () => {
+    state.darkMode = !state.darkMode; applyTheme(); saveState();
+  });
+  document.getElementById("toggleWardModeBtn").addEventListener("click", () => {
+    state.wardMode = !state.wardMode; applyTheme(); saveState();
+    showToast(state.wardMode ? "📱 Modo Pase de Visita activado" : "🖥️ Vista completa activada");
+  });
+
+  // === NAVEGACIÓN PRINCIPAL Y SUBTABS ===
+  const menuBtns = document.querySelectorAll(".menu button");
+  function switchPanel(targetId) {
+    menuBtns.forEach(b => b.classList.toggle("active", b.dataset.target === targetId));
+    document.querySelectorAll("section.panel").forEach(p => p.classList.toggle("active", p.id === targetId));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+  menuBtns.forEach(btn => btn.addEventListener("click", () => switchPanel(btn.dataset.target)));
+
+  document.querySelectorAll(".subtabs").forEach(tabBar => {
+    const parentPanel = tabBar.closest("section.panel");
+    tabBar.querySelectorAll(".subtab-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        tabBar.querySelectorAll(".subtab-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        const targetSub = btn.dataset.sub;
+        parentPanel.querySelectorAll(".subview").forEach(sv => sv.classList.toggle("active", sv.id === targetSub));
+      });
+    });
+  });
+
+  // === MODAL MEMBRETE Y QR ===
+  const membreteModal = document.getElementById("membreteModal");
+  function openMembrete() {
+    const m = state.membrete;
+    document.getElementById("mNombre").value = m.nombre;
+    document.getElementById("mTitulo").value = m.titulo;
+    document.getElementById("mCedula").value = m.cedula;
+    document.getElementById("mClinica").value = m.clinica;
+    document.getElementById("mTel").value = m.tel;
+    document.getElementById("mDireccion").value = m.direccion;
+    document.getElementById("mQrUrl").value = m.qrUrl || "";
+    document.getElementById("mShowQr").checked = !!m.showQr;
+    membreteModal.showModal();
+  }
+  document.getElementById("openMembreteBtn").addEventListener("click", openMembrete);
+  document.getElementById("editMembreteInlineBtn").addEventListener("click", openMembrete);
+  document.getElementById("closeMembreteBtn").addEventListener("click", () => membreteModal.close());
+  document.getElementById("resetLogoBtn").addEventListener("click", () => {
+    state.membrete.logoDataUrl = "";
+    document.getElementById("mLogoFile").value = "";
+    applyMembreteUI();
+    saveState();
+    showToast("Logotipo eliminado.");
+  });
+  document.getElementById("membreteForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    state.membrete.nombre = document.getElementById("mNombre").value.trim();
+    state.membrete.titulo = document.getElementById("mTitulo").value.trim();
+    state.membrete.cedula = document.getElementById("mCedula").value.trim();
+    state.membrete.clinica = document.getElementById("mClinica").value.trim();
+    state.membrete.tel = document.getElementById("mTel").value.trim();
+    state.membrete.direccion = document.getElementById("mDireccion").value.trim();
+    state.membrete.qrUrl = document.getElementById("mQrUrl").value.trim();
+    state.membrete.showQr = document.getElementById("mShowQr").checked;
+
+    const fileInput = document.getElementById("mLogoFile");
+    if (fileInput.files && fileInput.files[0]) {
+      const reader = new FileReader();
+      reader.onload = function(ev) {
+        state.membrete.logoDataUrl = ev.target.result;
+        applyMembreteUI(); saveState(); membreteModal.close();
+        showToast("✅ Membrete, logo y QR guardados.");
+      };
+      reader.readAsDataURL(fileInput.files[0]);
+    } else {
+      applyMembreteUI(); saveState(); membreteModal.close();
+      showToast("✅ Membrete y QR guardados.");
+    }
+  });
+
+  // === RESPALDO JSON ===
+  document.getElementById("exportJsonBtn").addEventListener("click", () => {
+    const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `respaldo-consultorio-v4-${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    showToast("💾 Respaldo .json descargado.");
+  });
+  document.getElementById("importJsonBtn").addEventListener("click", () => document.getElementById("importJsonFile").click());
+  document.getElementById("importJsonFile").addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      try {
+        const imported = JSON.parse(ev.target.result);
+        if (imported && typeof imported === "object") {
+          state = {
+            ...state,
+            ...imported,
+            membrete: { ...state.membrete, ...(imported.membrete || {}) },
+            customKits: imported.customKits || [],
+            customEfChips: imported.customEfChips || [],
+            customAlarmChips: imported.customAlarmChips || []
+          };
+          saveState(); applyTheme(); applyMembreteUI();
+          renderPacientes(); renderMeds(); refreshHcDropdown(); refreshTimelineSelect(); renderCitasProximas();
+          renderDynamicChips();
+          showToast("✅ Respaldo restaurado correctamente.");
+        }
+      } catch (err) { showToast("❌ Archivo JSON inválido."); }
+    };
+    reader.readAsText(file);
+  });
+
+  // === RECETA INTELIGENTE: ALERGIAS CRUZADAS + INTERACCIONES + KITS DINÁMICOS ===
+  const rxContainer = document.getElementById("rxMedListContainer");
+  document.getElementById("rFecha").valueAsDate = new Date();
+
+  const CROSS_ALLERGY_RULES = [
+    {
+      triggers: ["penicilina", "amoxicilina", "ampicilina", "betalactamico", "betalactámico"],
+      meds: ["amoxicilina", "ampicilina", "dicloxacilina", "penicilina", "cefalexina", "ceftriaxona", "cefuroxima"],
+      msg: "⚠️ ALERTA DE ALERGIA CRUZADA: El paciente refiere alergia a PENICILINAS / BETALACTÁMICOS y hay un betalactámico o cefalosporina prescrito en la receta."
+    },
+    {
+      triggers: ["aine", "aines", "ibuprofeno", "naproxeno", "ketorolaco", "diclofenaco", "aspirina", "acido acetilsalicilico"],
+      meds: ["ibuprofeno", "naproxeno", "ketorolaco", "diclofenaco", "celecoxib", "meloxicam", "metamizol", "aspirina"],
+      msg: "⚠️ ALERTA DE ALERGIA A AINEs: El paciente tiene hipersensibilidad registrada a AINEs y se detectó un antiinflamatorio no esteroideo en la prescripción."
+    },
+    {
+      triggers: ["sulfa", "sulfas", "sulfonamida", "trimetoprima"],
+      meds: ["hidroclorotiazida", "celecoxib", "trimetoprima", "sulfametoxazol", "furosemida"],
+      msg: "⚠️ ALERTA DE ALERGIA A SULFONAMIDAS: Precaución con diuréticos tiazídicos, sulfonamidas o inhibidores COX-2 (Celecoxib) en esta receta."
+    },
+    {
+      triggers: ["macrolido", "macrólido", "azitromicina", "claritromicina", "eritromicina"],
+      meds: ["azitromicina", "claritromicina", "eritromicina"],
+      msg: "⚠️ ALERTA DE ALERGIA A MACRÓLIDOS: Se detectó un macrólido en la receta."
+    },
+    {
+      triggers: ["quinolona", "fluoroquinolona", "ciprofloxacino", "levofloxacino"],
+      meds: ["ciprofloxacino", "levofloxacino", "moxifloxacino", "norfloxacino"],
+      msg: "⚠️ ALERTA DE ALERGIA A FLUOROQUINOLONAS: Se detectó una quinolona en la receta."
+    }
+  ];
+
+  const INTERACTION_RULES = [
+    {
+      groupA: ["ibuprofeno", "naproxeno", "ketorolaco", "diclofenaco", "celecoxib"],
+      groupB: ["losartan", "telmisartan", "captopril", "enalapril", "hidroclorotiazida"],
+      msg: "⚡ INTERACCIÓN (AINE + Antihipertensivo): Los AINEs reducen el efecto antihipertensivo de IECA/ARA-II/diuréticos y aumentan el riesgo de lesión renal aguda."
+    },
+    {
+      groupA: ["claritromicina", "azitromicina", "eritromicina"],
+      groupB: ["atorvastatina", "simvastatina", "rosuvastatina"],
+      msg: "⚡ INTERACCIÓN (Macrólido + Estatina): Inhibición de CYP3A4; aumenta riesgo de miopatía/rabdomiólisis. Valorar suspensión temporal de la estatina."
+    },
+    {
+      groupA: ["ciprofloxacino", "levofloxacino"],
+      groupB: ["prednisona", "dexametasona", "metilprednisolona"],
+      msg: "⚡ INTERACCIÓN (Quinolona + Corticoide): Incremento significativo en el riesgo de tendinitis y rotura del tendón de Aquiles."
+    },
+    {
+      groupA: ["ciprofloxacino", "levofloxacino", "azitromicina", "claritromicina"],
+      groupB: ["ondansetron"],
+      msg: "⚡ INTERACCIÓN (Prolongación intervalo QT): Combinación de fármacos que prolongan el segmento QT; vigilar riesgo arrítmico."
+    }
+  ];
+
+  function normalizeText(s) {
+    return String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  }
+
+  function checkRxSafety() {
+    const allergyTxt = normalizeText(document.getElementById("rAlergias").value);
+    const allergyBanner = document.getElementById("rxAllergyWarning");
+    const interBanner = document.getElementById("rxInteractionWarning");
+
+    const medNames = Array.from(rxContainer.querySelectorAll(".rx-name"))
+      .map(i => normalizeText(i.value))
+      .filter(Boolean);
+    const prescribedTxt = medNames.join(" ");
+
+    // 1. Alergias cruzadas
+    if (!allergyTxt || allergyTxt === "negadas" || allergyTxt === "ninguna") {
+      allergyBanner.classList.remove("visible");
+    } else {
+      const warnings = [];
+      CROSS_ALLERGY_RULES.forEach(rule => {
+        const hasTrigger = rule.triggers.some(t => allergyTxt.includes(normalizeText(t)));
+        const hasMed = rule.meds.some(m => prescribedTxt.includes(m));
+        if (hasTrigger && hasMed) warnings.push(rule.msg);
+      });
+      if (warnings.length) {
+        allergyBanner.innerHTML = warnings.join("<br>");
+        allergyBanner.classList.add("visible");
+      } else {
+        allergyBanner.classList.remove("visible");
+      }
+    }
+
+    // 2. Interacciones entre medicamentos prescritos
+    const interWarnings = [];
+    const ainesList = ["ibuprofeno", "naproxeno", "ketorolaco", "diclofenaco", "celecoxib"];
+    const ainesCount = medNames.filter(m => ainesList.some(a => m.includes(a))).length;
+    if (ainesCount >= 2) {
+      interWarnings.push("⚡ DUPLICIDAD TERAPÉUTICA (Doble AINE): Se detectaron dos AINEs simultáneos; aumenta el riesgo de sangrado gastrointestinal sin beneficio analgésico adicional.");
+    }
+    INTERACTION_RULES.forEach(rule => {
+      const hasA = rule.groupA.some(a => prescribedTxt.includes(a));
+      const hasB = rule.groupB.some(b => prescribedTxt.includes(b));
+      if (hasA && hasB) interWarnings.push(rule.msg);
+    });
+
+    if (interWarnings.length) {
+      interBanner.innerHTML = interWarnings.join("<br>");
+      interBanner.classList.add("visible");
+    } else {
+      interBanner.classList.remove("visible");
+    }
+  }
+  document.getElementById("rAlergias").addEventListener("input", checkRxSafety);
+
+  function buildMedOptionsHtml() {
+    let opts = `<option value="">-- Seleccionar del vademécum o escribir abajo --</option>`;
+    getAllMeds().forEach(m => {
+      opts += `<option value="${m.n.replace(/"/g, '&quot;')}">${m.n} (${m.pres})</option>`;
+    });
+    return opts;
+  }
+
+  function addRxMedRow(prefill = {}) {
+    const idx = rxContainer.children.length + 1;
+    const div = document.createElement("div");
+    div.className = "rx-item-row";
+    div.innerHTML = `
+      <div class="rx-item-head">
+        <strong style="font-size:13px;color:var(--accent-dark)">Medicamento #${idx}</strong>
+        <button type="button" class="btn btn-danger btn-sm remove-rx-row">✕ Quitar</button>
+      </div>
+      <div class="grid grid2">
+        <div class="field" style="margin-bottom:8px">
+          <label>Catálogo rápido</label>
+          <select class="rx-select-med">${buildMedOptionsHtml()}</select>
+        </div>
+        <div class="field" style="margin-bottom:8px">
+          <label>Nombre y presentación en receta *</label>
+          <input class="rx-name" placeholder="Ej. Amoxicilina 500 mg Cápsulas" value="${escapeHtml(prefill.name || "")}">
+        </div>
+      </div>
+      <div class="grid grid3">
+        <div class="field" style="margin:0"><label>Dosis y vía</label><input class="rx-dosis" placeholder="Ej. Tomar 1 cápsula VO" value="${escapeHtml(prefill.dosis || "")}"></div>
+        <div class="field" style="margin:0"><label>Frecuencia</label><input class="rx-freq" placeholder="Ej. Cada 8 horas" value="${escapeHtml(prefill.freq || "")}"></div>
+        <div class="field" style="margin:0"><label>Duración</label><input class="rx-dur" placeholder="Ej. Durante 7 días" value="${escapeHtml(prefill.dur || "")}"></div>
+      </div>
+    `;
+    const sel = div.querySelector(".rx-select-med");
+    const nameInput = div.querySelector(".rx-name");
+    sel.addEventListener("change", () => {
+      const found = getAllMeds().find(m => m.n === sel.value);
+      if (found) {
+        nameInput.value = `${found.n} — ${found.pres}`;
+        div.querySelector(".rx-dosis").value = found.dosis;
+        checkRxSafety();
+      }
+    });
+    nameInput.addEventListener("input", checkRxSafety);
+    div.querySelector(".remove-rx-row").addEventListener("click", () => {
+      if (rxContainer.children.length > 1) {
+        div.remove();
+        Array.from(rxContainer.children).forEach((row, i) => {
+          row.querySelector("strong").textContent = `Medicamento #${i + 1}`;
+        });
+      } else {
+        div.querySelectorAll("input").forEach(inp => inp.value = "");
+        sel.value = "";
+      }
+      checkRxSafety();
+    });
+    rxContainer.appendChild(div);
+    checkRxSafety();
+  }
+
+  addRxMedRow();
+  document.getElementById("addRxMedBtn").addEventListener("click", () => addRxMedRow());
+
+  // Renderizado dinámico de Esquemas Terapéuticos, Chips de Alarma y Chips de EF
+  function renderDynamicChips() {
+    // 1. Esquemas terapéuticos en Receta
+    const kitsBar = document.getElementById("rxKitsBar");
+    kitsBar.innerHTML = "";
+    getAllKits().forEach(kit => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "chip chip-kit";
+      btn.textContent = kit.label;
+      btn.addEventListener("click", () => {
+        document.getElementById("rDiagnostico").value = kit.dx;
+        rxContainer.innerHTML = "";
+        (kit.meds || []).forEach(m => addRxMedRow(m));
+        document.getElementById("rIndicaciones").value = kit.ind || "";
+        checkRxSafety();
+        showToast(`⚡ Esquema "${kit.label}" cargado.`);
+      });
+      kitsBar.appendChild(btn);
+    });
+
+    // 2. Chips de indicaciones / signos de alarma en Receta
+    const alarmBar = document.getElementById("rxAlarmChipsBar");
+    alarmBar.innerHTML = "";
+    [...DEFAULT_ALARM_CHIPS, ...(state.customAlarmChips || [])].forEach(c => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "chip";
+      btn.textContent = c.label;
+      btn.addEventListener("click", () => {
+        const ta = document.getElementById("rIndicaciones");
+        ta.value = ta.value ? ta.value.trim() + "\n• " + c.text : "• " + c.text;
+      });
+      alarmBar.appendChild(btn);
+    });
+
+    // 3. Chips de Exploración Física en Historia/SOAP
+    const efBar = document.getElementById("hcEfChipsBar");
+    efBar.innerHTML = "";
+    [...DEFAULT_EF_CHIPS, ...(state.customEfChips || [])].forEach(c => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "chip";
+      btn.textContent = c.label;
+      btn.addEventListener("click", () => {
+        const ta = document.getElementById("hcEf");
+        ta.value = ta.value ? ta.value.trim() + "\n" + c.text : c.text;
+      });
+      efBar.appendChild(btn);
+    });
+  }
+  renderDynamicChips();
+
+  // Clonar última consulta
+  document.getElementById("cloneLastRxBtn").addEventListener("click", () => {
+    if (!state.consultas.length) {
+      showToast("No hay consultas previas guardadas para clonar.");
+      return;
+    }
+    const last = state.consultas[state.consultas.length - 1];
+    document.getElementById("rPaciente").value = last.nombre || "";
+    document.getElementById("rEdad").value = last.edad ? `${last.edad} años · ${last.sexo || ""}` : "";
+    document.getElementById("rDiagnostico").value = last.dx || "";
+    if (last.peso) document.getElementById("rvPeso").value = last.peso;
+    if (last.ta) document.getElementById("rvTa").value = last.ta;
+    if (last.tx) {
+      rxContainer.innerHTML = "";
+      last.tx.split(";").forEach(item => {
+        if (item.trim()) addRxMedRow({ name: item.trim() });
+      });
+      if (!rxContainer.children.length) addRxMedRow();
+    }
+    checkRxSafety();
+    showToast(`📋 Datos de ${last.nombre} cargados.`);
+  });
+
+  // === GESTOR VISUAL DE ESQUEMAS Y PLANTILLAS ===
+  const templatesModal = document.getElementById("templatesModal");
+  function renderCustomTemplatesLists() {
+    const kitsBox = document.getElementById("customKitsList");
+    if (!state.customKits.length) {
+      kitsBox.innerHTML = "Sin esquemas personalizados todavía.";
+    } else {
+      kitsBox.innerHTML = state.customKits.map((k, idx) => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)">
+          <span><strong>${escapeHtml(k.label)}</strong> — ${escapeHtml(k.dx)} (${k.meds.length} fármaco/s)</span>
+          <button type="button" class="btn btn-danger btn-sm del-ckit" data-idx="${idx}">🗑️</button>
+        </div>
+      `).join("");
+      kitsBox.querySelectorAll(".del-ckit").forEach(btn => {
+        btn.addEventListener("click", () => {
+          state.customKits.splice(parseInt(btn.dataset.idx), 1);
+          saveState(); renderDynamicChips(); renderCustomTemplatesLists();
+        });
+      });
+    }
+
+    const snipBox = document.getElementById("customSnippetsList");
+    const allSnips = [
+      ...state.customEfChips.map((s, i) => ({ ...s, kind: "ef", idx: i, tag: "Exploración Física" })),
+      ...state.customAlarmChips.map((s, i) => ({ ...s, kind: "alarm", idx: i, tag: "Indicaciones/Alarma" }))
+    ];
+    if (!allSnips.length) {
+      snipBox.innerHTML = "";
+    } else {
+      snipBox.innerHTML = allSnips.map(s => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)">
+          <span><span class="pill">${s.tag}</span> <strong>${escapeHtml(s.label)}</strong></span>
+          <button type="button" class="btn btn-danger btn-sm del-csnip" data-kind="${s.kind}" data-idx="${s.idx}">🗑️</button>
+        </div>
+      `).join("");
+      snipBox.querySelectorAll(".del-csnip").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const i = parseInt(btn.dataset.idx);
+          if (btn.dataset.kind === "ef") state.customEfChips.splice(i, 1);
+          else state.customAlarmChips.splice(i, 1);
+          saveState(); renderDynamicChips(); renderCustomTemplatesLists();
+        });
+      });
+    }
+  }
+
+  function openTemplatesModal() {
+    renderCustomTemplatesLists();
+    templatesModal.showModal();
+  }
+  document.getElementById("openTemplatesBtn").addEventListener("click", openTemplatesModal);
+  document.getElementById("manageKitsInlineBtn").addEventListener("click", openTemplatesModal);
+  document.getElementById("closeTemplatesBtn").addEventListener("click", () => templatesModal.close());
+
+  document.getElementById("newKitForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const label = document.getElementById("nkLabel").value.trim();
+    const dx = document.getElementById("nkDx").value.trim();
+    const rawMeds = document.getElementById("nkMeds").value.trim().split("\n").filter(Boolean);
+    const meds = rawMeds.map(line => {
+      const parts = line.split("|").map(p => p.trim());
+      return { name: parts[0] || "", dosis: parts[1] || "", freq: parts[2] || "", dur: parts[3] || "" };
+    });
+    const ind = document.getElementById("nkInd").value.trim();
+    state.customKits.push({ id: "custom_" + Date.now(), label, dx, meds, ind });
+    saveState(); renderDynamicChips(); renderCustomTemplatesLists();
+    e.target.reset();
+    showToast(`✅ Esquema "${label}" creado.`);
+  });
+
+  document.getElementById("newSnippetForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const type = document.getElementById("nsType").value;
+    const label = "+ " + document.getElementById("nsLabel").value.trim().replace(/^\+\s*/, "");
+    const text = document.getElementById("nsText").value.trim();
+    if (type === "ef") state.customEfChips.push({ label, text });
+    else state.customAlarmChips.push({ label, text });
+    saveState(); renderDynamicChips(); renderCustomTemplatesLists();
+    e.target.reset();
+    showToast(`✅ Plantilla "${label}" agregada.`);
+  });
+
+  // === VISTA PREVIA E IMPRESIÓN DE RECETA ===
+  function renderRxPrintView() {
+    applyMembreteUI();
+    document.getElementById("prDocTitle").textContent = "RECETA MÉDICA";
+    document.getElementById("prFooterNote").innerHTML = "Favor de traer esta receta en su próxima consulta.<br>No se automedique.";
+    const fecha = document.getElementById("rFecha").value || new Date().toISOString().slice(0,10);
+    document.getElementById("prFecha").textContent = `Fecha: ${fecha}`;
+
+    const pac = document.getElementById("rPaciente").value.trim() || "Paciente sin especificar";
+    const edad = document.getElementById("rEdad").value.trim() || "—";
+    const dx = document.getElementById("rDiagnostico").value.trim() || "—";
+    const alergias = document.getElementById("rAlergias").value.trim();
+
+    let html = `
+      <div class="rx-patient-box">
+        <div><strong>Paciente:</strong> ${escapeHtml(pac)}</div>
+        <div><strong>Edad / Sexo:</strong> ${escapeHtml(edad)}</div>
+        <div style="grid-column:1/-1"><strong>Diagnóstico:</strong> ${escapeHtml(dx)}</div>
+      </div>
+    `;
+
+    if (alergias && alergias.toLowerCase() !== "negadas" && alergias.toLowerCase() !== "ninguna") {
+      html += `<div class="rx-allergy-strip">⚠️ ALERGIAS: ${escapeHtml(alergias.toUpperCase())}</div>`;
+    } else if (alergias) {
+      html += `<div style="font-size:12px;color:#475569;margin-bottom:10px"><strong>Alergias:</strong> ${escapeHtml(alergias)}</div>`;
+    }
+
+    if (document.getElementById("rIncludeVitals").checked) {
+      const p = document.getElementById("rvPeso").value.trim();
+      const t = document.getElementById("rvTalla").value.trim();
+      const ta = document.getElementById("rvTa").value.trim();
+      const temp = document.getElementById("rvTemp").value.trim();
+      if (p || t || ta || temp) {
+        html += `<div class="rx-vitals-strip">
+          ${p ? `<span><strong>Peso:</strong> ${escapeHtml(p)} kg</span>` : ""}
+          ${t ? `<span><strong>Talla:</strong> ${escapeHtml(t)} m</span>` : ""}
+          ${ta ? `<span><strong>TA:</strong> ${escapeHtml(ta)} mmHg</span>` : ""}
+          ${temp ? `<span><strong>Temp/SpO₂:</strong> ${escapeHtml(temp)}</span>` : ""}
+        </div>`;
+      }
+    }
+
+    html += `<div class="rx-body"><div class="rx-rp">Rp.</div><ol class="rx-med-list">`;
+    let hasMed = false;
+    Array.from(rxContainer.children).forEach(row => {
+      const name = row.querySelector(".rx-name").value.trim();
+      const dosis = row.querySelector(".rx-dosis").value.trim();
+      const freq = row.querySelector(".rx-freq").value.trim();
+      const dur = row.querySelector(".rx-dur").value.trim();
+      if (name || dosis) {
+        hasMed = true;
+        const details = [dosis, freq, dur].filter(Boolean).join(" · ");
+        html += `<li><strong>${escapeHtml(name)}</strong><br><span>${escapeHtml(details)}</span></li>`;
+      }
+    });
+    if (!hasMed) html += `<li><em>Sin medicamentos capturados.</em></li>`;
+    html += `</ol>`;
+
+    const ind = document.getElementById("rIndicaciones").value.trim();
+    if (ind) {
+      html += `<div style="margin-top:16px;padding-top:10px;border-top:1px dashed #cbd5e1;font-size:13.5px"><strong>Indicaciones y signos de alarma:</strong><div style="white-space:pre-wrap;margin-top:4px">${escapeHtml(ind)}</div></div>`;
+    }
+    html += `</div>`;
+
+    document.getElementById("printDynamicContent").innerHTML = html;
+    const sheet = document.getElementById("printSheet");
+    sheet.classList.add("visible");
+    return sheet;
+  }
+
+  document.getElementById("previewRecetaBtn").addEventListener("click", () => {
+    renderRxPrintView().scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+  document.getElementById("printDirectBtn").addEventListener("click", () => {
+    renderRxPrintView();
+    setTimeout(() => window.print(), 150);
+  });
+  document.getElementById("clearRxBtn").addEventListener("click", () => {
+    document.getElementById("recetaForm").reset();
+    document.getElementById("rFecha").valueAsDate = new Date();
+    rxContainer.innerHTML = "";
+    addRxMedRow();
+    checkRxSafety();
+    document.getElementById("printSheet").classList.remove("visible");
+  });
+
+  document.getElementById("saveRxToBitacoraBtn").addEventListener("click", () => {
+    const nombre = document.getElementById("rPaciente").value.trim();
+    if (!nombre) { showToast("⚠️ Escribe el nombre del paciente primero."); return; }
+    const medsSummary = Array.from(rxContainer.children).map(row => {
+      const n = row.querySelector(".rx-name").value.trim();
+      const d = row.querySelector(".rx-dosis").value.trim();
+      return [n, d].filter(Boolean).join(" ");
+    }).filter(Boolean).join("; ");
+
+    state.consultas.push({
+      id: Date.now(),
+      fecha: document.getElementById("rFecha").value || new Date().toISOString().slice(0,10),
+      nombre,
+      edad: document.getElementById("rEdad").value.trim(),
+      sexo: "—",
+      tel: "",
+      motivo: "Consulta / Receta",
+      dx: document.getElementById("rDiagnostico").value.trim(),
+      tx: medsSummary,
+      peso: document.getElementById("rvPeso").value.trim(),
+      ta: document.getElementById("rvTa").value.trim(),
+      costo: document.getElementById("rHonorarios").value.trim(),
+      cita: ""
+    });
+    saveState();
+    renderPacientes(); refreshTimelineSelect(); renderCitasProximas();
+    showToast(`💾 Consulta de ${nombre} guardada en Expediente.`);
+  });
+
+  // === BITÁCORA, EXPEDIENTE LONGITUDINAL Y AGENDA WHATSAPP ===
+  const listaPacientes = document.getElementById("listaPacientes");
+  document.getElementById("pFecha").valueAsDate = new Date();
+
+  function renderPacientes() {
+    const q = document.getElementById("buscarPaciente").value.toLowerCase();
+    const f = document.getElementById("filtroFecha").value;
+    listaPacientes.innerHTML = "";
+
+    const visibles = state.consultas.filter(c => {
+      const okQ = !q || `${c.nombre} ${c.motivo} ${c.dx} ${c.tx}`.toLowerCase().includes(q);
+      const okF = !f || c.fecha === f;
+      return okQ && okF;
+    });
+
+    const sumaVisible = visibles.reduce((acc, c) => acc + (parseFloat(c.costo) || 0), 0);
+    document.getElementById("contadorPacientes").textContent =
+      `${state.consultas.length} consulta(s) totales · ${visibles.length} visible(s) · Total ingresos mostrados: $${sumaVisible.toLocaleString("es-MX")} MXN.`;
+
+    if (!visibles.length) {
+      listaPacientes.innerHTML = `<p class="small">No hay consultas registradas con este filtro.</p>`;
+      return;
+    }
+
+    visibles.slice().reverse().forEach(c => {
+      const previas = state.consultas.filter(x => x.nombre.toLowerCase() === c.nombre.toLowerCase()).length;
+      const art = document.createElement("article");
+      art.className = "patient";
+      art.innerHTML = `
+        <header>
+          <div>
+            <strong style="font-size:16px">${escapeHtml(c.nombre)}</strong>
+            <span class="pill" style="margin-left:6px">${escapeHtml(c.fecha)}</span>
+            <span class="pill" style="margin-left:4px">${previas} visita(s)</span>
+            ${c.costo ? `<span class="pill" style="margin-left:4px">$${escapeHtml(c.costo)}</span>` : ""}
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button type="button" class="btn btn-secondary btn-sm view-tl-btn">📈 Expediente</button>
+            <button type="button" class="btn btn-secondary btn-sm to-rx-btn">📝 Recetar</button>
+            <button type="button" class="btn btn-danger btn-sm del-pt-btn">🗑️</button>
+          </div>
+        </header>
+        <p class="small" style="margin:6px 0">${c.edad ? escapeHtml(c.edad) + " · " : ""}${escapeHtml(c.sexo || "")} ${c.peso ? "· Peso: " + escapeHtml(c.peso) + " kg" : ""} ${c.ta ? "· TA: " + escapeHtml(c.ta) : ""} ${c.cita ? "· Próxima cita: " + escapeHtml(c.cita) : ""}</p>
+        <p style="margin:4px 0;font-size:14px"><strong>Motivo:</strong> ${escapeHtml(c.motivo || "—")}</p>
+        <p style="margin:4px 0;font-size:14px"><strong>Diagnóstico:</strong> ${escapeHtml(c.dx || "—")}</p>
+        <p style="margin:4px 0;font-size:14px"><strong>Tratamiento:</strong> ${escapeHtml(c.tx || "—")}</p>
+      `;
+      art.querySelector(".view-tl-btn").addEventListener("click", () => {
+        const tlSel = document.getElementById("selectPatientTimeline");
+        tlSel.value = c.nombre.toLowerCase();
+        renderPatientTimeline(c.nombre.toLowerCase());
+        document.querySelector('[data-sub="subExpedienteTimeline"]').click();
+      });
+      art.querySelector(".to-rx-btn").addEventListener("click", () => {
+        document.getElementById("rPaciente").value = c.nombre;
+        document.getElementById("rEdad").value = c.edad ? `${c.edad} años · ${c.sexo}` : (c.sexo || "");
+        document.getElementById("rDiagnostico").value = c.dx || "";
+        if (c.peso) document.getElementById("rvPeso").value = c.peso;
+        if (c.ta) document.getElementById("rvTa").value = c.ta;
+        switchPanel("receta");
+      });
+      const delBtn = art.querySelector(".del-pt-btn");
+      delBtn.addEventListener("click", () => {
+        if (delBtn.dataset.confirm === "1") {
+          state.consultas = state.consultas.filter(item => item.id !== c.id);
+          saveState(); renderPacientes(); refreshTimelineSelect(); renderCitasProximas();
+          showToast("🗑️ Registro eliminado.");
+        } else {
+          delBtn.dataset.confirm = "1";
+          delBtn.textContent = "¿Confirmar?";
+          setTimeout(() => { delBtn.dataset.confirm = ""; delBtn.textContent = "🗑️"; }, 3000);
+        }
+      });
+      listaPacientes.appendChild(art);
+    });
+  }
+
+  document.getElementById("pacienteForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    state.consultas.push({
+      id: Date.now(),
+      fecha: document.getElementById("pFecha").value,
+      nombre: document.getElementById("pNombre").value.trim(),
+      edad: document.getElementById("pEdad").value.trim(),
+      sexo: document.getElementById("pSexo").value,
+      tel: document.getElementById("pTel").value.trim(),
+      motivo: document.getElementById("pMotivo").value.trim(),
+      dx: document.getElementById("pDx").value.trim(),
+      costo: document.getElementById("pCosto").value.trim(),
+      peso: document.getElementById("pPeso").value.trim(),
+      ta: document.getElementById("pTa").value.trim(),
+      tx: document.getElementById("pTx").value.trim(),
+      cita: document.getElementById("pCita").value
+    });
+    saveState();
+    e.target.reset();
+    document.getElementById("pFecha").valueAsDate = new Date();
+    renderPacientes(); refreshTimelineSelect(); renderCitasProximas();
+    showToast("✅ Consulta guardada en expediente.");
+  });
+
+  document.getElementById("buscarPaciente").addEventListener("input", renderPacientes);
+  document.getElementById("filtroFecha").addEventListener("change", renderPacientes);
+
+  // Expediente Longitudinal & Gráficas SVG
+  function refreshTimelineSelect() {
+    const sel = document.getElementById("selectPatientTimeline");
+    const current = sel.value;
+    const namesMap = new Map();
+    state.consultas.forEach(c => namesMap.set(c.nombre.toLowerCase(), c.nombre));
+    state.historias.forEach(h => namesMap.set(h.nombre.toLowerCase(), h.nombre));
+
+    sel.innerHTML = `<option value="">-- Seleccionar paciente (${namesMap.size}) --</option>`;
+    Array.from(namesMap.entries()).sort((a, b) => a[1].localeCompare(b[1])).forEach(([key, label]) => {
+      const opt = document.createElement("option");
+      opt.value = key;
+      opt.textContent = label;
+      sel.appendChild(opt);
+    });
+    if (current && namesMap.has(current)) sel.value = current;
+  }
+
+  function buildWeightChartSvg(visits) {
+    const pts = visits.filter(v => parseFloat(v.peso) > 0).map(v => ({ fecha: v.fecha, val: parseFloat(v.peso) }));
+    if (pts.length < 2) return "";
+    const w = 440, h = 130, pad = 26;
+    const minV = Math.min(...pts.map(p => p.val)) - 2;
+    const maxV = Math.max(...pts.map(p => p.val)) + 2;
+    const coords = pts.map((p, i) => {
+      const x = pad + (i * (w - pad * 2)) / (pts.length - 1);
+      const y = h - pad - ((p.val - minV) / (maxV - minV || 1)) * (h - pad * 2);
+      return { x, y, ...p };
+    });
+    const poly = coords.map(c => `${c.x.toFixed(1)},${c.y.toFixed(1)}`).join(" ");
+    const dots = coords.map(c => `<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="4" fill="var(--accent)"/><text x="${c.x.toFixed(1)}" y="${(c.y - 8).toFixed(1)}" font-size="10" text-anchor="middle" fill="var(--ink)" font-weight="bold">${c.val}kg</text><text x="${c.x.toFixed(1)}" y="${h - 6}" font-size="9" text-anchor="middle" fill="var(--muted)">${c.fecha.slice(5)}</text>`).join("");
+    return `<div class="card" style="margin-bottom:14px"><h4 style="margin-bottom:6px">Curva de evolución de Peso (kg)</h4><svg viewBox="0 0 ${w} ${h}" style="width:100%;max-width:500px;height:auto"><polyline fill="none" stroke="var(--accent)" stroke-width="2.5" points="${poly}"/>${dots}</svg></div>`;
+  }
+
+  function renderPatientTimeline(nameKey) {
+    const box = document.getElementById("timelineContainer");
+    if (!nameKey) {
+      box.innerHTML = `<p class="small">Selecciona un paciente de la lista para visualizar su expediente longitudinal.</p>`;
+      return;
+    }
+    const visits = state.consultas.filter(c => c.nombre.toLowerCase() === nameKey).sort((a, b) => a.fecha.localeCompare(b.fecha));
+    const hcs = state.historias.filter(h => h.nombre.toLowerCase() === nameKey);
+
+    let html = "";
+    if (hcs.length) {
+      const latestHc = hcs[hcs.length - 1];
+      html += `
+        <div class="card" style="margin-bottom:16px">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+            <h3 style="color:var(--accent-dark)">Ficha Base · ${escapeHtml(latestHc.nombre)}</h3>
+            <span class="pill">Alergias: ${escapeHtml(latestHc.alergias || "Negadas")}</span>
+          </div>
+          <div class="grid grid2" style="font-size:13px">
+            <div><strong>AHF:</strong> ${escapeHtml(latestHc.ahf || "—")}</div>
+            <div><strong>APP:</strong> ${escapeHtml(latestHc.app || "—")}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    html += buildWeightChartSvg(visits);
+    html += `<h3 style="margin-bottom:12px">Línea de tiempo de atenciones (${visits.length + hcs.length})</h3><div class="timeline">`;
+
+    const allEvents = [
+      ...visits.map(v => ({ tipo: "Consulta / Receta", fecha: v.fecha, dx: v.dx, detalle: `Motivo: ${v.motivo || "—"} | Tx: ${v.tx || "—"}`, vitals: `${v.peso ? "Peso: " + v.peso + " kg · " : ""}${v.ta ? "TA: " + v.ta : ""}` })),
+      ...hcs.map(h => ({ tipo: h.tipoDoc || "Historia Clínica", fecha: h.fecha, dx: h.dx, detalle: `PA: ${h.pa || "—"} | Plan: ${h.plan || "—"}`, vitals: `TA: ${h.ta || "—"} · Peso: ${h.peso || "—"} kg` }))
+    ].sort((a, b) => b.fecha.localeCompare(a.fecha));
+
+    allEvents.forEach(ev => {
+      html += `
+        <div class="tl-item">
+          <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:4px">
+            <strong>${escapeHtml(ev.tipo)}</strong>
+            <span class="pill">${escapeHtml(ev.fecha)}</span>
+          </div>
+          <p style="margin:3px 0;font-size:13.5px"><strong>Diagnóstico:</strong> ${escapeHtml(ev.dx || "—")}</p>
+          <p style="margin:3px 0;font-size:13px;color:var(--muted)">${escapeHtml(ev.detalle)}</p>
+          ${ev.vitals.trim() ? `<p class="small" style="margin:3px 0 0">${escapeHtml(ev.vitals)}</p>` : ""}
+        </div>
+      `;
+    });
+    html += `</div>`;
+    box.innerHTML = html;
+  }
+
+  document.getElementById("selectPatientTimeline").addEventListener("change", (e) => renderPatientTimeline(e.target.value));
+
+  // Agenda de Próximas Citas + WhatsApp 1-clic
+  function renderCitasProximas() {
+    const box = document.getElementById("listaCitasProximas");
+    const withCita = state.consultas.filter(c => c.cita).sort((a, b) => a.cita.localeCompare(b.cita));
+    if (!withCita.length) {
+      box.innerHTML = `<p class="small">No hay próximas citas registradas todavía. Al guardar una consulta con fecha de «Próxima cita», aparecerá aquí.</p>`;
+      return;
+    }
+    box.innerHTML = "";
+    withCita.forEach(c => {
+      const cleanPhone = (c.tel || "").replace(/\D/g, "");
+      const waPhone = cleanPhone.length === 10 ? `52${cleanPhone}` : cleanPhone;
+      const msg = encodeURIComponent(`Hola ${c.nombre}, le saludamos de ${state.membrete.clinica} (${state.membrete.nombre}) para recordarle su cita médica de seguimiento programada para el día ${c.cita}. ¿Confirmamos su asistencia?`);
+      const waHref = waPhone ? `https://wa.me/${waPhone}?text=${msg}` : `https://wa.me/?text=${msg}`;
+
+      const div = document.createElement("article");
+      div.className = "patient";
+      div.innerHTML = `
+        <header>
+          <div>
+            <strong>${escapeHtml(c.nombre)}</strong>
+            <span class="pill" style="margin-left:8px">📅 Cita: ${escapeHtml(c.cita)}</span>
+          </div>
+          <a class="btn btn-wa btn-sm" href="${waHref}" target="_blank" rel="noopener">💬 Recordar por WhatsApp</a>
+        </header>
+        <p class="small" style="margin:6px 0 0">Último diagnóstico: ${escapeHtml(c.dx || "Seguimiento")} ${c.tel ? "· Tel: " + escapeHtml(c.tel) : "· (Sin teléfono guardado: abrirá selector de contacto)"}</p>
+      `;
+      box.appendChild(div);
+    });
+  }
+
+  renderPacientes();
+  refreshTimelineSelect();
+  renderCitasProximas();
+
+  document.getElementById("exportCsvBtn").addEventListener("click", () => {
+    const rows = [["Fecha", "Nombre", "Edad", "Sexo", "Teléfono", "Motivo", "Diagnóstico", "Tratamiento", "Peso", "TA", "Honorarios", "Próxima Cita"]];
+    state.consultas.forEach(c => rows.push([c.fecha, c.nombre, c.edad, c.sexo, c.tel, c.motivo, c.dx, c.tx, c.peso, c.ta, c.costo, c.cita]));
+    const csv = rows.map(r => r.map(v => `"${String(v || "").replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `bitacora-pacientes-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    showToast("⬇ Archivo Excel (.csv) descargado.");
+  });
+
+  // === HISTORIA CLÍNICA / NOTA DE EVOLUCIÓN SOAP ===
+  function clasifIMC(imc) {
+    if (imc < 18.5) return "Bajo peso";
+    if (imc < 25) return "Peso normal";
+    if (imc < 30) return "Sobrepeso";
+    if (imc < 35) return "Obesidad grado I";
+    if (imc < 40) return "Obesidad grado II";
+    return "Obesidad grado III";
+  }
+
+  function updateHcVitals() {
+    const p = parseFloat(document.getElementById("hcPeso").value);
+    const t = parseFloat(document.getElementById("hcTalla").value);
+    const taStr = document.getElementById("hcTa").value.trim();
+    let parts = [];
+    if (p > 0 && t > 0) {
+      const imc = p / (t * t);
+      parts.push(`IMC: ${imc.toFixed(1)} kg/m² (${clasifIMC(imc)})`);
+    }
+    if (taStr.includes("/")) {
+      const [s, d] = taStr.split("/").map(Number);
+      if (s > 0 && d > 0) parts.push(`PAM: ${(d + (s - d) / 3).toFixed(0)} mmHg`);
+    }
+    document.getElementById("hcImcResult").textContent = parts.length ? parts.join(" · ") : "Captura peso, talla y TA para calcular IMC y PAM.";
+    document.getElementById("hcCalcSummary").value = parts.join(" | ");
+  }
+  ["hcPeso", "hcTalla", "hcTa"].forEach(id => document.getElementById(id).addEventListener("input", updateHcVitals));
+
+  function refreshHcDropdown() {
+    const sel = document.getElementById("savedHcSelect");
+    sel.innerHTML = `<option value="">-- Cargar expediente (${state.historias.length}) --</option>`;
+    state.historias.slice().reverse().forEach(h => {
+      const opt = document.createElement("option");
+      opt.value = h.id;
+      opt.textContent = `${h.nombre} · ${h.tipoDoc || "HC"} (${h.fecha})`;
+      sel.appendChild(opt);
+    });
+  }
+  refreshHcDropdown();
+
+  document.getElementById("savedHcSelect").addEventListener("change", (e) => {
+    const found = state.historias.find(h => String(h.id) === e.target.value);
+    if (!found) return;
+    if (found.tipoDoc) document.getElementById("hcTipoDoc").value = found.tipoDoc;
+    document.getElementById("hcNombre").value = found.nombre || "";
+    document.getElementById("hcEdad").value = found.edad || "";
+    document.getElementById("hcSexo").value = found.sexo || "Femenino";
+    document.getElementById("hcOcupacion").value = found.ocupacion || "";
+    document.getElementById("hcTelefono").value = found.telefono || "";
+    document.getElementById("hcAlergias").value = found.alergias || "";
+    document.getElementById("hcDomicilio").value = found.domicilio || "";
+    document.getElementById("hcAhf").value = found.ahf || "";
+    document.getElementById("hcApp").value = found.app || "";
+    document.getElementById("hcApnp").value = found.apnp || "";
+    document.getElementById("hcPa").value = found.pa || "";
+    document.getElementById("hcTa").value = found.ta || "";
+    document.getElementById("hcFc").value = found.fc || "";
+    document.getElementById("hcFr").value = found.fr || "";
+    document.getElementById("hcTemp").value = found.temp || "";
+    document.getElementById("hcSpo2").value = found.spo2 || "";
+    document.getElementById("hcPeso").value = found.peso || "";
+    document.getElementById("hcTalla").value = found.talla || "";
+    document.getElementById("hcEf").value = found.ef || "";
+    document.getElementById("hcDx").value = found.dx || "";
+    document.getElementById("hcPlan").value = found.plan || "";
+    updateHcVitals();
+  });
+
+  // Pasar Dx y Plan directo a Receta
+  document.getElementById("hcToRxBtn").addEventListener("click", () => {
+    document.getElementById("rPaciente").value = document.getElementById("hcNombre").value.trim();
+    const edad = document.getElementById("hcEdad").value.trim();
+    const sexo = document.getElementById("hcSexo").value;
+    document.getElementById("rEdad").value = edad ? `${edad} · ${sexo}` : sexo;
+    document.getElementById("rAlergias").value = document.getElementById("hcAlergias").value.trim();
+    document.getElementById("rDiagnostico").value = document.getElementById("hcDx").value.trim();
+    document.getElementById("rvPeso").value = document.getElementById("hcPeso").value.trim();
+    document.getElementById("rvTalla").value = document.getElementById("hcTalla").value.trim();
+    document.getElementById("rvTa").value = document.getElementById("hcTa").value.trim();
+    const temp = document.getElementById("hcTemp").value.trim();
+    const spo2 = document.getElementById("hcSpo2").value.trim();
+    document.getElementById("rvTemp").value = [temp ? temp + " °C" : "", spo2 ? spo2 + "%" : ""].filter(Boolean).join(" · ");
+    const plan = document.getElementById("hcPlan").value.trim();
+    if (plan) document.getElementById("rIndicaciones").value = plan;
+    checkRxSafety();
+    switchPanel("receta");
+    showToast("📝 Datos clínicos transferidos a la Receta.");
+  });
+
+  document.getElementById("hcForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const nombre = document.getElementById("hcNombre").value.trim();
+    if (!nombre) return;
+    state.historias.push({
+      id: Date.now(),
+      fecha: new Date().toISOString().slice(0,10),
+      tipoDoc: document.getElementById("hcTipoDoc").value,
+      nombre,
+      edad: document.getElementById("hcEdad").value.trim(),
+      sexo: document.getElementById("hcSexo").value,
+      ocupacion: document.getElementById("hcOcupacion").value.trim(),
+      telefono: document.getElementById("hcTelefono").value.trim(),
+      alergias: document.getElementById("hcAlergias").value.trim(),
+      domicilio: document.getElementById("hcDomicilio").value.trim(),
+      ahf: document.getElementById("hcAhf").value.trim(),
+      app: document.getElementById("hcApp").value.trim(),
+      apnp: document.getElementById("hcApnp").value.trim(),
+      pa: document.getElementById("hcPa").value.trim(),
+      ta: document.getElementById("hcTa").value.trim(),
+      fc: document.getElementById("hcFc").value.trim(),
+      fr: document.getElementById("hcFr").value.trim(),
+      temp: document.getElementById("hcTemp").value.trim(),
+      spo2: document.getElementById("hcSpo2").value.trim(),
+      peso: document.getElementById("hcPeso").value.trim(),
+      talla: document.getElementById("hcTalla").value.trim(),
+      ef: document.getElementById("hcEf").value.trim(),
+      dx: document.getElementById("hcDx").value.trim(),
+      plan: document.getElementById("hcPlan").value.trim()
+    });
+    saveState(); refreshHcDropdown(); refreshTimelineSelect();
+    showToast(`💾 Expediente de ${nombre} guardado.`);
+  });
+
+  document.getElementById("printHcBtn").addEventListener("click", () => {
+    applyMembreteUI();
+    document.getElementById("prDocTitle").textContent = document.getElementById("hcTipoDoc").value;
+    document.getElementById("prFooterNote").innerHTML = "Documento clínico confidencial conforme a la NOM-004-SSA3-2012.";
+    document.getElementById("prFecha").textContent = `Fecha: ${new Date().toISOString().slice(0,10)}`;
+
+    const g = id => document.getElementById(id).value.trim() || "—";
+    const vitals = `TA: ${g("hcTa")} mmHg · FC: ${g("hcFc")} lpm · FR: ${g("hcFr")} rpm · Temp: ${g("hcTemp")} °C · SpO₂: ${g("hcSpo2")}% · Peso: ${g("hcPeso")} kg · Talla: ${g("hcTalla")} m · ${g("hcCalcSummary")}`;
+
+    document.getElementById("printDynamicContent").innerHTML = `
+      <div class="rx-patient-box">
+        <div><strong>Paciente:</strong> ${escapeHtml(g("hcNombre"))}</div>
+        <div><strong>Edad / Nac:</strong> ${escapeHtml(g("hcEdad"))}</div>
+        <div><strong>Sexo:</strong> ${escapeHtml(g("hcSexo"))}</div>
+        <div><strong>Ocupación:</strong> ${escapeHtml(g("hcOcupacion"))}</div>
+        <div><strong>Teléfono:</strong> ${escapeHtml(g("hcTelefono"))}</div>
+        <div><strong>Grupo / Alergias:</strong> ${escapeHtml(g("hcAlergias"))}</div>
+        <div style="grid-column:1/-1"><strong>Domicilio:</strong> ${escapeHtml(g("hcDomicilio"))}</div>
+      </div>
+      <div class="rx-vitals-strip"><strong>Signos Vitales:</strong> ${escapeHtml(vitals)}</div>
+      <div style="font-size:13px;line-height:1.45;display:grid;gap:8px">
+        <div><strong>AHF:</strong> ${escapeHtml(g("hcAhf"))}</div>
+        <div><strong>APP:</strong> ${escapeHtml(g("hcApp"))}</div>
+        <div><strong>APNP:</strong> ${escapeHtml(g("hcApnp"))}</div>
+        <div><strong>Padecimiento Actual / Subjetivo (S):</strong> ${escapeHtml(g("hcPa"))}</div>
+        <div><strong>Exploración Física / Objetivo (O):</strong> ${escapeHtml(g("hcEf"))}</div>
+        <div><strong>Análisis y Diagnóstico(s) (A):</strong> ${escapeHtml(g("hcDx"))}</div>
+        <div><strong>Plan Terapéutico y Pronóstico (P):</strong> ${escapeHtml(g("hcPlan"))}</div>
+      </div>
+    `;
+    document.getElementById("printSheet").classList.add("visible");
+    setTimeout(() => window.print(), 150);
+  });
+
+  // === DOCUMENTOS MÉDICOS IMPRIMIBLES (LABS, CERTIFICADOS, CONSENTIMIENTO) ===
+  document.querySelectorAll(".lab-chk").forEach(cb => {
+    cb.addEventListener("change", () => {
+      const preps = new Set();
+      document.querySelectorAll(".lab-chk:checked").forEach(x => {
+        if (x.dataset.prep) preps.add(x.dataset.prep);
+      });
+      document.getElementById("labPrep").value = Array.from(preps).map(p => "• " + p).join("\n");
+    });
+  });
+
+  document.getElementById("printLabBtn").addEventListener("click", () => {
+    applyMembreteUI();
+    document.getElementById("prDocTitle").textContent = "SOLICITUD DE ESTUDIOS";
+    document.getElementById("prFecha").textContent = `Fecha: ${new Date().toISOString().slice(0,10)}`;
+    document.getElementById("prFooterNote").innerHTML = "Favor de presentar esta orden en el laboratorio o gabinete de su elección.";
+
+    const selected = Array.from(document.querySelectorAll(".lab-chk:checked")).map(c => c.value);
+    const extra = document.getElementById("labExtra").value.trim();
+    if (extra) extra.split("\n").forEach(line => { if (line.trim()) selected.push(line.trim()); });
+    const prep = document.getElementById("labPrep").value.trim();
+
+    document.getElementById("printDynamicContent").innerHTML = `
+      <div class="rx-patient-box">
+        <div><strong>Paciente:</strong> ${escapeHtml(document.getElementById("labPac").value.trim() || "—")}</div>
+        <div><strong>Edad / Sexo:</strong> ${escapeHtml(document.getElementById("labEdad").value.trim() || "—")}</div>
+        <div style="grid-column:1/-1"><strong>Diagnóstico presuntivo:</strong> ${escapeHtml(document.getElementById("labDx").value.trim() || "—")}</div>
+      </div>
+      <div class="rx-body">
+        <p style="font-weight:700;margin-bottom:8px">Se solicita atentamente la realización de los siguientes estudios:</p>
+        <ul style="font-size:14px;line-height:1.6">
+          ${selected.length ? selected.map(s => `<li><strong>${escapeHtml(s)}</strong></li>`).join("") : "<li><em>Sin estudios seleccionados.</em></li>"}
+        </ul>
+        ${prep ? `<div style="margin-top:18px;padding:10px 14px;background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;font-size:13px"><strong>Indicaciones de preparación para el paciente:</strong><div style="white-space:pre-wrap;margin-top:4px">${escapeHtml(prep)}</div></div>` : ""}
+      </div>
+    `;
+    document.getElementById("printSheet").classList.add("visible");
+    setTimeout(() => window.print(), 150);
+  });
+
+  function buildCertTemplate() {
+    const tipo = document.getElementById("certTipo").value;
+    const pac = document.getElementById("certPac").value.trim() || "[NOMBRE DEL PACIENTE]";
+    const edad = document.getElementById("certEdad").value.trim() || "[EDAD]";
+    const peso = document.getElementById("certPeso").value.trim() || "—";
+    const talla = document.getElementById("certTalla").value.trim() || "—";
+    const ta = document.getElementById("certTa").value.trim() || "—";
+    const fct = document.getElementById("certFcTemp").value.trim() || "—";
+    const dias = document.getElementById("certDias").value.trim() || "48 horas a partir de la fecha";
+
+    if (tipo === "buena_salud") {
+      return `El que suscribe, médico legalmente autorizado para el ejercicio de su profesión, HACE CONSTAR que habiendo practicado el examen médico clínico a ${pac}, de ${edad}, con signos vitales: TA ${ta} mmHg, FC/Temp ${fct}, Peso ${peso} kg y Talla ${talla} m, se encuentra clínicamente SANO(A), sin datos de enfermedad infectocontagiosa aguda ni impedimento físico aparente al momento de la valoración.\n\nSe extiende el presente certificado a petición de la parte interesada para los fines escolares, administrativos o laborales que convengan.`;
+    } else if (tipo === "deportivo") {
+      return `El que suscribe, médico cirujano legalmente autorizado, CERTIFICA que ${pac}, de ${edad}, fue sometido(a) a valoración médica integral (TA ${ta} mmHg, FC/Temp ${fct}, Peso ${peso} kg, Talla ${talla} m), encontrándose cardiopulmonar y musculoesqueléticamente APTO(A) para realizar actividad física y deportiva.\n\nSe expide la presente constancia a solicitud del interesado(a).`;
+    } else {
+      return `Por medio de la presente se HACE CONSTAR que ${pac}, de ${edad}, acudió a valoración médica el día de hoy, cursando con un padecimiento agudo que requiere tratamiento médico y reposo relativo en domicilio durante ${dias}.\n\nSe extiende el presente justificante médico a petición del paciente para los trámites escolares o laborales correspondientes.`;
+    }
+  }
+  document.getElementById("certTexto").value = buildCertTemplate();
+  document.getElementById("certTipo").addEventListener("change", () => { document.getElementById("certTexto").value = buildCertTemplate(); });
+  document.getElementById("regenCertBtn").addEventListener("click", () => { document.getElementById("certTexto").value = buildCertTemplate(); });
+
+  document.getElementById("printCertBtn").addEventListener("click", () => {
+    applyMembreteUI();
+    const isJust = document.getElementById("certTipo").value === "justificante";
+    document.getElementById("prDocTitle").textContent = isJust ? "JUSTIFICANTE MÉDICO" : "CERTIFICADO MÉDICO";
+    document.getElementById("prFecha").textContent = `Fecha: ${new Date().toISOString().slice(0,10)}`;
+    document.getElementById("prFooterNote").innerHTML = "Válido únicamente con firma autógrafa y sello del médico.";
+    const dest = document.getElementById("certDestino").value.trim() || "A QUIEN CORRESPONDA:";
+
+    document.getElementById("printDynamicContent").innerHTML = `
+      <div class="rx-body" style="padding-top:10px">
+        <p style="font-weight:800;font-size:14px;margin-bottom:16px">${escapeHtml(dest)}</p>
+        <div style="white-space:pre-wrap;font-size:14.5px;line-height:1.75;text-align:justify">${escapeHtml(document.getElementById("certTexto").value)}</div>
+      </div>
+    `;
+    document.getElementById("printSheet").classList.add("visible");
+    setTimeout(() => window.print(), 150);
+  });
+
+  function buildLegalTemplate() {
+    const tipo = document.getElementById("legalTipo").value;
+    const pac = document.getElementById("legalPac").value.trim() || "[NOMBRE DEL PACIENTE]";
+    const proc = document.getElementById("legalProc").value.trim() || "[PROCEDIMIENTO / UNIDAD RECEPTORA]";
+    const dx = document.getElementById("legalDx").value.trim() || "[DIAGNÓSTICO]";
+    if (tipo === "consentimiento") {
+      return `En pleno uso de mis facultades mentales y en cumplimiento con la Norma Oficial Mexicana NOM-004-SSA3-2012, yo ${pac} declaro que el médico tratante me ha explicado de forma clara y comprensible mi diagnóstico (${dx}), así como la naturaleza, beneficios esperados y riesgos potenciales (como dolor local, sangrado leve, infección o reacción alérgica) del procedimiento: ${proc}.\n\nHabiendo aclarado todas mis dudas, OTORGO MI CONSENTIMIENTO LIBRE Y VOLUNTARIO para la realización de dicho procedimiento y autorizo atender cualquier contingencia derivada del mismo.\n\nFirma del Paciente / Responsable: _______________________   Testigo: _______________________`;
+    } else {
+      return `HOJA DE REFERENCIA MÉDICA (NOM-004-SSA3-2012)\n\nUnidad / Servicio al que se refiere: ${proc}\nPaciente: ${pac}\nDiagnóstico de envío: ${dx}\n\nResumen clínico, terapéutica empleada y motivo de envío:\nSe refiere paciente para valoración especializada y manejo complementario. Signos vitales estables al momento del envío. Se anexa resumen de evolución.`;
+    }
+  }
+  document.getElementById("legalTexto").value = buildLegalTemplate();
+  document.getElementById("legalTipo").addEventListener("change", () => { document.getElementById("legalTexto").value = buildLegalTemplate(); });
+  document.getElementById("regenLegalBtn").addEventListener("click", () => { document.getElementById("legalTexto").value = buildLegalTemplate(); });
+
+  document.getElementById("printLegalBtn").addEventListener("click", () => {
+    applyMembreteUI();
+    const isRef = document.getElementById("legalTipo").value === "referencia";
+    document.getElementById("prDocTitle").textContent = isRef ? "HOJA DE REFERENCIA" : "CONSENTIMIENTO INFORMADO";
+    document.getElementById("prFecha").textContent = `Fecha: ${new Date().toISOString().slice(0,10)}`;
+    document.getElementById("prFooterNote").innerHTML = "Integrado al expediente clínico conforme a la NOM-004-SSA3-2012.";
+
+    document.getElementById("printDynamicContent").innerHTML = `
+      <div class="rx-patient-box">
+        <div><strong>Paciente:</strong> ${escapeHtml(document.getElementById("legalPac").value.trim() || "—")}</div>
+        <div><strong>Edad / Testigo:</strong> ${escapeHtml(document.getElementById("legalTestigo").value.trim() || "—")}</div>
+      </div>
+      <div class="rx-body">
+        <div style="white-space:pre-wrap;font-size:14px;line-height:1.65;text-align:justify">${escapeHtml(document.getElementById("legalTexto").value)}</div>
+      </div>
+    `;
+    document.getElementById("printSheet").classList.add("visible");
+    setTimeout(() => window.print(), 150);
+  });
+
+  // === 14 CALCULADORAS CLÍNICAS ===
+  // 1. Gasometría Arterial + Winter + Anion Gap
+  function calcGasometry() {
+    const ph = parseFloat(document.getElementById("gasPh").value);
+    const pco2 = parseFloat(document.getElementById("gasPco2").value);
+    const hco3 = parseFloat(document.getElementById("gasHco3").value);
+    const na = parseFloat(document.getElementById("gasNa").value);
+    const cl = parseFloat(document.getElementById("gasCl").value);
+    const out = document.getElementById("gasResult");
+
+    if (!(ph > 6.5 && ph < 8.0 && pco2 > 0 && hco3 > 0)) {
+      out.textContent = "Captura pH, PaCO₂ y HCO₃⁻ para diagnosticar el trastorno primario, compensación (Winter) y Anion Gap.";
+      return;
+    }
+
+    let disorder = "Equilibrio ácido-base normal";
+    let compTxt = "";
+    if (ph < 7.35) {
+      if (hco3 < 22 && pco2 <= 45) {
+        disorder = "Acidosis Metabólica primaria";
+        const winterLow = 1.5 * hco3 + 8 - 2;
+        const winterHigh = 1.5 * hco3 + 8 + 2;
+        const compStatus = (pco2 >= winterLow && pco2 <= winterHigh) ? "Compensada adecuadamente" : (pco2 > winterHigh ? "Acidosis respiratoria agregada" : "Alcalosis respiratoria agregada");
+        compTxt = ` · PaCO₂ esperada (Winter): ${winterLow.toFixed(1)}–${winterHigh.toFixed(1)} mmHg (${compStatus}).`;
+      } else if (pco2 > 45 && hco3 >= 22) {
+        disorder = "Acidosis Respiratoria primaria";
+        compTxt = hco3 > 26 ? " · Con compensación metabólica (crónica)." : " · Aguda (sin compensación renal aún).";
+      } else {
+        disorder = "Acidosis Mixta (Metabólica + Respiratoria)";
+      }
+    } else if (ph > 7.45) {
+      if (hco3 > 26 && pco2 >= 35) {
+        disorder = "Alcalosis Metabólica primaria";
+        const expPco2 = 0.7 * (hco3 - 24) + 40;
+        compTxt = ` · PaCO₂ esperada: ~${expPco2.toFixed(1)} mmHg.`;
+      } else if (pco2 < 35 && hco3 <= 26) {
+        disorder = "Alcalosis Respiratoria primaria";
+        compTxt = hco3 < 22 ? " · Con compensación metabólica (crónica)." : " · Aguda.";
+      } else {
+        disorder = "Alcalosis Mixta (Metabólica + Respiratoria)";
+      }
+    } else if (pco2 < 35 || pco2 > 45 || hco3 < 22 || hco3 > 26) {
+      disorder = "pH en rango normal con trastorno compensado o mixto";
+    }
+
+    let agTxt = "";
+    if (na > 0 && cl > 0) {
+      const ag = na - (cl + hco3);
+      agTxt = `<br>Anion Gap: <strong>${ag.toFixed(1)} mEq/L</strong> (${ag > 12 ? "Anion Gap ELEVADO — evaluar MUDPILES/GOLDMARK" : "Anion Gap normal, hiperclorémica"}).`;
+    }
+    out.innerHTML = `Diagnóstico: <strong>${disorder}</strong>${compTxt}${agTxt}`;
+  }
+  ["gasPh", "gasPco2", "gasHco3", "gasNa", "gasCl"].forEach(id => document.getElementById(id).addEventListener("input", calcGasometry));
+
+  // 2. Interpretador Rápido de Paraclínicos (BH, QS y EGO)
+  let lastLabsSummary = "";
+  function calcParaclinicos() {
+    const hb = parseFloat(document.getElementById("labHb").value);
+    const leu = parseFloat(document.getElementById("labLeu").value);
+    const plt = parseFloat(document.getElementById("labPlt").value);
+    const glu = parseFloat(document.getElementById("labGlu").value);
+    const cr = parseFloat(document.getElementById("labCr").value);
+    const ego = document.getElementById("labEgo").value;
+    const out = document.getElementById("paraclinicosResult");
+
+    const findings = [];
+    const rawParts = [];
+    if (hb > 0) {
+      rawParts.push(`Hb ${hb} g/dL`);
+      if (hb < 12) findings.push("Anemia (<12 g/dL)");
+      else if (hb > 17.5) findings.push("Policitemia/hemoconcentración");
+    }
+    if (leu > 0) {
+      rawParts.push(`Leucos ${leu}×10³/µL`);
+      if (leu > 11) findings.push("Leucocitosis (>11×10³)");
+      else if (leu < 4) findings.push("Leucopenia (<4×10³)");
+    }
+    if (plt > 0) {
+      rawParts.push(`Plt ${plt}×10³`);
+      if (plt < 150) findings.push("Trombocitopenia (<150×10³)");
+      else if (plt > 450) findings.push("Trombocitosis (>450×10³)");
+    }
+    if (glu > 0) {
+      rawParts.push(`Glucosa ${glu} mg/dL`);
+      if (glu >= 126) findings.push("Hiperglucemia en rango diabético (≥126 mg/dL)");
+      else if (glu >= 100) findings.push("Glucosa alterada en ayuno (100–125 mg/dL)");
+      else if (glu < 70) findings.push("Hipoglucemia (<70 mg/dL)");
+    }
+    if (cr > 0) {
+      rawParts.push(`Creatinina ${cr} mg/dL`);
+      if (cr > 1.3) findings.push("Elevación de creatinina / azotemia (>1.3 mg/dL)");
+    }
+    if (ego === "patologico") {
+      rawParts.push("EGO patológico (nitritos/leucocituria)");
+      findings.push("EGO sugestivo de infección de vías urinarias");
+    }
+
+    if (!rawParts.length) {
+      out.textContent = "Captura resultados para detectar hallazgos fuera de rango e insertarlos en la nota médica.";
+      lastLabsSummary = "";
+      return;
+    }
+
+    const interp = findings.length ? `Hallazgos: ${findings.join(", ")}.` : "Parámetros capturados dentro de límites de referencia.";
+    lastLabsSummary = `Paraclínicos: ${rawParts.join(" · ")}. ${interp}`;
+    out.innerHTML = `<strong>${escapeHtml(interp)}</strong><br><span class="small">${escapeHtml(rawParts.join(" · "))}</span>`;
+  }
+  ["labHb", "labLeu", "labPlt", "labGlu", "labCr", "labEgo"].forEach(id => document.getElementById(id).addEventListener("input", calcParaclinicos));
+
+  document.getElementById("insertLabsToHcBtn").addEventListener("click", () => {
+    if (!lastLabsSummary) {
+      showToast("⚠️ Captura al menos un valor de laboratorio primero.");
+      return;
+    }
+    const ef = document.getElementById("hcEf");
+    ef.value = ef.value ? ef.value.trim() + "\n" + lastLabsSummary : lastLabsSummary;
+    switchPanel("historia");
+    showToast("📋 Resumen de paraclínicos insertado en Historia/SOAP.");
+  });
+
+  // 3. Sodio y Calcio Corregidos
+  function calcCorrections() {
+    const na = parseFloat(document.getElementById("corrNa").value);
+    const glu = parseFloat(document.getElementById("corrGlu").value);
+    const ca = parseFloat(document.getElementById("corrCa").value);
+    const alb = parseFloat(document.getElementById("corrAlb").value);
+    const out = document.getElementById("corrResult");
+    const lines = [];
+    if (na > 0 && glu > 0) {
+      const factor = glu > 400 ? 2.4 : 1.6;
+      const naCorr = na + factor * ((glu - 100) / 100);
+      lines.push(`Na⁺ corregido (factor ${factor}): <strong>${naCorr.toFixed(1)} mEq/L</strong>`);
+    }
+    if (ca > 0 && alb > 0) {
+      const caCorr = ca + 0.8 * (4.0 - alb);
+      lines.push(`Ca²⁺ corregido por albúmina: <strong>${caCorr.toFixed(2)} mg/dL</strong> (normal: 8.5–10.5)`);
+    }
+    out.innerHTML = lines.length ? lines.join("<br>") : "Captura Na⁺ + Glucosa (Katz/Hillier) y/o Ca²⁺ + Albúmina (Payne).";
+  }
+  ["corrNa", "corrGlu", "corrCa", "corrAlb"].forEach(id => document.getElementById(id).addEventListener("input", calcCorrections));
+
+  // 4. IMC + SC + Peso Ideal
+  function calcAnthropometry() {
+    const p = parseFloat(document.getElementById("imcPeso").value);
+    const t = parseFloat(document.getElementById("imcTalla").value);
+    const sexo = document.getElementById("imcSexo").value;
+    const out = document.getElementById("imcResult");
+    if (p > 0 && t > 0) {
+      const imc = p / (t * t);
+      const sc = Math.sqrt((p * (t * 100)) / 3600);
+      const inchesOver5ft = Math.max(0, (t * 39.3701) - 60);
+      const pesoIdeal = (sexo === "M" ? 50 : 45.5) + 2.3 * inchesOver5ft;
+      out.innerHTML = `IMC: <strong>${imc.toFixed(1)} kg/m²</strong> (${clasifIMC(imc)})<br>SC (Mosteller): <strong>${sc.toFixed(2)} m²</strong> · Peso ideal: <strong>${pesoIdeal.toFixed(1)} kg</strong>`;
+    } else {
+      out.textContent = "Captura peso y talla para ver IMC, SC (Mosteller) y peso ideal.";
+    }
+  }
+  ["imcPeso", "imcTalla", "imcSexo"].forEach(id => document.getElementById(id).addEventListener("input", calcAnthropometry));
+
+  // 5. TFG CKD-EPI 2021
+  function calcTfg() {
+    const cr = parseFloat(document.getElementById("tfgCr").value);
+    const edad = parseFloat(document.getElementById("tfgEdad").value);
+    const sexo = document.getElementById("tfgSexo").value;
+    const out = document.getElementById("tfgResult");
+    if (cr > 0 && edad >= 18) {
+      const kappa = sexo === "F" ? 0.7 : 0.9;
+      const alpha = sexo === "F" ? -0.241 : -0.302;
+      const factorSexo = sexo === "F" ? 1.012 : 1.0;
+      const tfg = 142 * Math.pow(Math.min(cr / kappa, 1), alpha) * Math.pow(Math.max(cr / kappa, 1), -1.200) * Math.pow(0.9938, edad) * factorSexo;
+      let estadio = "G1 (≥90)";
+      if (tfg < 15) estadio = "G5 (<15)";
+      else if (tfg < 30) estadio = "G4 (15–29)";
+      else if (tfg < 45) estadio = "G3b (30–44)";
+      else if (tfg < 60) estadio = "G3a (45–59)";
+      else if (tfg < 90) estadio = "G2 (60–89)";
+      out.innerHTML = `TFGe CKD-EPI 2021: <strong>${tfg.toFixed(1)} mL/min/1.73m²</strong> — Estadio ${estadio}`;
+    } else {
+      out.textContent = "TFGe: captura creatinina y edad (≥18 años).";
+    }
+  }
+  ["tfgCr", "tfgEdad", "tfgSexo"].forEach(id => document.getElementById(id).addEventListener("input", calcTfg));
+
+  // 6. FPP Naegele
+  document.getElementById("fur").addEventListener("change", function() {
+    const out = document.getElementById("fppResult");
+    if (!this.value) { out.textContent = "FPP: selecciona la FUR."; return; }
+    const d = new Date(this.value + "T12:00:00");
+    const fpp = new Date(d);
+    fpp.setDate(fpp.getDate() + 7); fpp.setMonth(fpp.getMonth() - 3); fpp.setFullYear(fpp.getFullYear() + 1);
+    const diffDays = Math.floor((new Date() - d) / (1000 * 60 * 60 * 24));
+    const sem = Math.floor(diffDays / 7), dias = diffDays % 7;
+    const trim = sem < 14 ? "1er Trimestre" : (sem < 28 ? "2º Trimestre" : "3er Trimestre");
+    const fmt = x => x.toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" });
+    out.innerHTML = `FPP: <strong>${fmt(fpp)}</strong>` + (sem >= 0 && sem <= 44 ? `<br>Edad gestacional hoy: <strong>${sem} SDG + ${dias} días</strong> (${trim})` : "");
+  });
+
+  // 7. PAM
+  function calcPam() {
+    const s = parseFloat(document.getElementById("pamSis").value), d = parseFloat(document.getElementById("pamDia").value);
+    const out = document.getElementById("pamResult");
+    if (s > 0 && d > 0) {
+      const pam = d + (s - d) / 3;
+      const interp = pam < 65 ? "Hipotensión / Hipoperfusión (<65 mmHg)" : (pam <= 100 ? "Rango normal (70–100 mmHg)" : "Elevada (>100 mmHg)");
+      out.innerHTML = `PAM: <strong>${pam.toFixed(1)} mmHg</strong> — ${interp}`;
+    } else out.textContent = "PAM: captura TA sistólica y diastólica.";
+  }
+  ["pamSis", "pamDia"].forEach(id => document.getElementById(id).addEventListener("input", calcPam));
+
+  // 8. Alvarado
+  document.querySelectorAll(".alvarado").forEach(cb => cb.addEventListener("change", () => {
+    let t = 0; document.querySelectorAll(".alvarado:checked").forEach(x => t += parseInt(x.value));
+    const txt = t <= 4 ? "Baja probabilidad de apendicitis; observar y revalorar."
+              : t <= 6 ? "Probabilidad intermedia; solicitar ultrasonido/TAC abdominal."
+              : "Alta probabilidad (≥7 pts); valoración urgente por Cirugía General.";
+    document.getElementById("alvaradoResult").innerHTML = `Alvarado: <strong>${t}/10 pts</strong> — ${txt}`;
+  }));
+
+  // 9. Wells TVP
+  document.querySelectorAll(".wells").forEach(cb => cb.addEventListener("change", () => {
+    let t = 0; document.querySelectorAll(".wells:checked").forEach(x => t += parseInt(x.value));
+    const txt = t <= 0 ? "Probabilidad baja (≤0 pts); solicitar Dímero D."
+              : t <= 2 ? "Probabilidad moderada (1–2 pts); Dímero D / Ultrasonido Doppler."
+              : "Probabilidad alta (≥3 pts); solicitar Ultrasonido Doppler venoso urgente.";
+    document.getElementById("wellsResult").innerHTML = `Wells TVP: <strong>${t} pts</strong> — ${txt}`;
+  }));
+
+  // 10. Glasgow
+  function calcGlasgow() {
+    const t = parseInt(document.getElementById("gOcular").value) + parseInt(document.getElementById("gVerbal").value) + parseInt(document.getElementById("gMotora").value);
+    const nivel = t >= 13 ? "Leve (13–15)" : (t >= 9 ? "Moderado (9–12)" : "Grave (≤8 · Valorar protección de vía aérea)");
+    document.getElementById("glasgowResult").innerHTML = `Glasgow: <strong>${t}/15</strong> — ${nivel}`;
+  }
+  ["gOcular", "gVerbal", "gMotora"].forEach(id => document.getElementById(id).addEventListener("change", calcGlasgow));
+
+  // 11. CURB-65
+  document.querySelectorAll(".curb").forEach(cb => cb.addEventListener("change", () => {
+    let t = 0; document.querySelectorAll(".curb:checked").forEach(x => t += parseInt(x.value));
+    const txt = t === 0 ? "Riesgo bajo; manejo ambulatorio." : t === 1 ? "Riesgo bajo-intermedio; valorar observación." : t === 2 ? "Riesgo intermedio; hospitalizar." : "Riesgo alto (3–5); hospitalización urgente / UCI.";
+    document.getElementById("curbResult").innerHTML = `CURB-65: <strong>${t}/5</strong> — ${txt}`;
+  }));
+
+  // 12. Centor McIsaac
+  function calcCentor() {
+    let t = parseInt(document.getElementById("centorEdad").value);
+    document.querySelectorAll(".centor:checked").forEach(x => t += parseInt(x.value));
+    const txt = t <= 1 ? "Riesgo bajo (<10% S. pyogenes); manejo sintomático." : t <= 3 ? "Riesgo intermedio (15–35%); valorar prueba rápida/cultivo." : "Riesgo alto (>50%); antibioticoterapia empírica recomendada.";
+    document.getElementById("centorResult").innerHTML = `McIsaac: <strong>${t} pts</strong> — ${txt}`;
+  }
+  document.querySelectorAll(".centor").forEach(cb => cb.addEventListener("change", calcCentor));
+  document.getElementById("centorEdad").addEventListener("change", calcCentor);
+
+  // 13. CHA2DS2-VASc
+  document.querySelectorAll(".chads").forEach(cb => cb.addEventListener("change", () => {
+    let t = 0; document.querySelectorAll(".chads:checked").forEach(x => t += parseInt(x.value));
+    const txt = t === 0 ? "Riesgo bajo (0 pts); sin anticoagulación." : t === 1 ? "Riesgo bajo-moderado (1 pt); considerar anticoagulación." : "Riesgo alto (≥2 pts); anticoagulación oral indicada.";
+    document.getElementById("chadsResult").innerHTML = `CHA₂DS₂-VASc: <strong>${t} pts</strong> — ${txt}`;
+  }));
+
+  // 14. FINDRISC
+  document.querySelectorAll(".findrisc").forEach(sel => sel.addEventListener("change", () => {
+    let t = 0; document.querySelectorAll(".findrisc").forEach(s => t += parseInt(s.value));
+    let txt = "Riesgo bajo (<7 pts · 1% a 10 años).";
+    if (t >= 21) txt = "Riesgo MUY ALTO (>20 pts · 50% a 10 años); solicitar glucosa/HbA1c e intervención intensiva.";
+    else if (t >= 15) txt = "Riesgo ALTO (15–20 pts · 33% a 10 años); tamizaje glucémico y plan nutricional.";
+    else if (t >= 12) txt = "Riesgo MODERADO (12–14 pts · 17% a 10 años); reforzar estilo de vida.";
+    else if (t >= 7) txt = "Riesgo LIGERAMENTE ELEVADO (7–11 pts · 4% a 10 años).";
+    document.getElementById("findriscResult").innerHTML = `FINDRISC: <strong>${t} pts</strong> — ${txt}`;
+  }));
+
+  // === VADEMÉCUM ===
+  const tablaMeds = document.getElementById("tablaMeds");
+  function renderMeds() {
+    const q = document.getElementById("buscarMed").value.toLowerCase();
+    const grp = document.getElementById("filtroGrupoMed").value;
+    tablaMeds.innerHTML = "";
+    let count = 0;
+    getAllMeds().forEach(m => {
+      if ((q && !`${m.n} ${m.g} ${m.pres} ${m.ind} ${m.dosis}`.toLowerCase().includes(q)) || (grp && m.g !== grp)) return;
+      count++;
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td><strong>${escapeHtml(m.n)}</strong></td>
+        <td><span class="pill">${escapeHtml(m.g)}</span></td>
+        <td>${escapeHtml(m.pres)}</td>
+        <td>${escapeHtml(m.dosis)}</td>
+        <td>${escapeHtml(m.ind)}</td>
+        <td>${escapeHtml(m.contra)}</td>
+        <td><button type="button" class="btn btn-primary btn-sm use-med-btn">+ Recetar</button></td>
+      `;
+      tr.querySelector(".use-med-btn").addEventListener("click", () => {
+        const firstRow = rxContainer.children[0];
+        if (firstRow && !firstRow.querySelector(".rx-name").value.trim()) {
+          firstRow.querySelector(".rx-name").value = `${m.n} — ${m.pres}`;
+          firstRow.querySelector(".rx-dosis").value = m.dosis;
+        } else {
+          addRxMedRow({ name: `${m.n} — ${m.pres}`, dosis: m.dosis });
+        }
+        checkRxSafety();
+        switchPanel("receta");
+      });
+      tablaMeds.appendChild(tr);
+    });
+    document.getElementById("contadorMeds").textContent = `Mostrando ${count} medicamento(s).`;
+  }
+  document.getElementById("buscarMed").addEventListener("input", renderMeds);
+  document.getElementById("filtroGrupoMed").addEventListener("change", renderMeds);
+  renderMeds();
+
+  const addMedModal = document.getElementById("addMedModal");
+  document.getElementById("openAddMedModalBtn").addEventListener("click", () => addMedModal.showModal());
+  document.getElementById("closeAddMedBtn").addEventListener("click", () => addMedModal.close());
+  document.getElementById("addMedForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    state.customMeds.push({
+      n: document.getElementById("nmNombre").value.trim(),
+      g: document.getElementById("nmGrupo").value,
+      pres: document.getElementById("nmPres").value.trim(),
+      dosis: document.getElementById("nmDosis").value.trim(),
+      ind: document.getElementById("nmInd").value.trim() || "—",
+      contra: document.getElementById("nmContra").value.trim() || "—"
+    });
+    saveState(); renderMeds(); e.target.reset(); addMedModal.close();
+    showToast("✅ Medicamento agregado al vademécum.");
+  });
+
+  // === PEDIATRÍA ===
+  const PED_DRUGS = {
+    para_gotas: { label: "Paracetamol Gotas (100 mg/mL)", minKg: 10, maxKg: 15, mgPerMl: 100, freq: "Cada 6 a 8 horas (máx. 75 mg/kg/día)", perDay: false },
+    para_jarabe: { label: "Paracetamol Jarabe (160 mg/5 mL)", minKg: 10, maxKg: 15, mgPerMl: 32, freq: "Cada 6 a 8 horas (máx. 75 mg/kg/día)", perDay: false },
+    ibu_100: { label: "Ibuprofeno Suspensión (100 mg/5 mL)", minKg: 5, maxKg: 10, mgPerMl: 20, freq: "Cada 6 a 8 horas (mayores de 6 meses)", perDay: false },
+    ibu_200: { label: "Ibuprofeno Suspensión (200 mg/5 mL)", minKg: 5, maxKg: 10, mgPerMl: 40, freq: "Cada 6 a 8 horas (mayores de 6 meses)", perDay: false },
+    amox_250: { label: "Amoxicilina Suspensión (250 mg/5 mL)", minKg: 40, maxKg: 80, mgPerMl: 50, freq: "Dividido cada 8 o 12 horas por 7–10 días", perDay: true, div: 3 },
+    amox_500: { label: "Amoxicilina Suspensión (500 mg/5 mL)", minKg: 40, maxKg: 80, mgPerMl: 100, freq: "Dividido cada 8 o 12 horas por 7–10 días", perDay: true, div: 3 },
+    amoxclav_400: { label: "Amoxicilina/Clavulanato (400/57 mg/5 mL)", minKg: 45, maxKg: 90, mgPerMl: 80, freq: "Dividido cada 12 horas por 7–10 días", perDay: true, div: 2 },
+    azitro_200: { label: "Azitromicina Suspensión (200 mg/5 mL)", minKg: 10, maxKg: 10, mgPerMl: 40, freq: "Cada 24 horas por 3 a 5 días", perDay: false },
+    lora_5: { label: "Loratadina Jarabe (5 mg/5 mL)", minKg: 0.2, maxKg: 0.2, mgPerMl: 1, freq: "Cada 24 horas (máx. 10 mg/día)", perDay: false }
+  };
+
+  let lastPedRx = null;
+  function calcPed() {
+    const peso = parseFloat(document.getElementById("pedPeso").value);
+    const drug = PED_DRUGS[document.getElementById("pedMed").value];
+    document.getElementById("pedFreq").value = drug.freq;
+    const out = document.getElementById("pedResult");
+    const sendBtn = document.getElementById("sendPedToRxBtn");
+
+    if (!(peso > 0)) {
+      out.textContent = "Captura el peso del niño para obtener los miligramos y mililitros exactos por toma.";
+      sendBtn.disabled = true; lastPedRx = null; return;
+    }
+
+    if (!drug.perDay) {
+      const minMg = peso * drug.minKg, maxMg = peso * drug.maxKg;
+      const minMl = minMg / drug.mgPerMl, maxMl = maxMg / drug.mgPerMl;
+      const mlTxt = minMl === maxMl ? `${minMl.toFixed(1)} mL` : `${minMl.toFixed(1)} a ${maxMl.toFixed(1)} mL`;
+      const mgTxt = minMg === maxMg ? `${minMg.toFixed(0)} mg` : `${minMg.toFixed(0)}–${maxMg.toFixed(0)} mg`;
+      out.innerHTML = `<strong>${drug.label}</strong> (${peso} kg):<br>Administrar <strong>${mlTxt} VO</strong> por toma (${mgTxt}) · ${drug.freq}.`;
+      lastPedRx = { name: drug.label, dosis: `Administrar ${mlTxt} vía oral por toma`, freq: drug.freq };
+    } else {
+      const minDayMg = peso * drug.minKg, maxDayMg = peso * drug.maxKg;
+      const minDoseMg = minDayMg / drug.div, maxDoseMg = maxDayMg / drug.div;
+      const minDoseMl = minDoseMg / drug.mgPerMl, maxDoseMl = maxDoseMg / drug.mgPerMl;
+      out.innerHTML = `<strong>${drug.label}</strong> (${peso} kg):<br>Dosis por toma (c/${24/drug.div}h): <strong>${minDoseMl.toFixed(1)} a ${maxDoseMl.toFixed(1)} mL VO</strong> (${minDoseMg.toFixed(0)}–${maxDoseMg.toFixed(0)} mg/toma · ${minDayMg.toFixed(0)}–${maxDayMg.toFixed(0)} mg/día).`;
+      lastPedRx = { name: drug.label, dosis: `Administrar ${minDoseMl.toFixed(1)} a ${maxDoseMl.toFixed(1)} mL vía oral`, freq: `Cada ${24/drug.div} horas` };
+    }
+    sendBtn.disabled = false;
+  }
+
+  document.getElementById("pedPeso").addEventListener("input", calcPed);
+  document.getElementById("pedMed").addEventListener("change", calcPed);
+  document.getElementById("sendPedToRxBtn").addEventListener("click", () => {
+    if (!lastPedRx) return;
+    const firstRow = rxContainer.children[0];
+    if (firstRow && !firstRow.querySelector(".rx-name").value.trim()) {
+      firstRow.querySelector(".rx-name").value = lastPedRx.name;
+      firstRow.querySelector(".rx-dosis").value = lastPedRx.dosis;
+      firstRow.querySelector(".rx-freq").value = lastPedRx.freq;
+    } else {
+      addRxMedRow(lastPedRx);
+    }
+    checkRxSafety();
+    switchPanel("receta");
+  });
+
+  function escapeHtml(str) {
+    return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+})();
+</script>
+</body>
+</html>

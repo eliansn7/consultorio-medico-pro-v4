@@ -1,0 +1,18 @@
+{
+  "name": "Consultorio Médico Pro v4",
+  "short_name": "Consultorio Pro",
+  "description": "Sistema de expediente clinico, recetario y calculadoras medicas",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#0f766e",
+  "theme_color": "#0f766e",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
