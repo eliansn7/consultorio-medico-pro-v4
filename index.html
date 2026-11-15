@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
-<title>Consultorio Médico Pro v4 · Expediente Clínico, Recetario Inteligente y Calculadoras</title>
+<title>Consultorio Médico Pro v5 · Expediente Clínico, Recetario Inteligente y Calculadoras</title>
 <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js");</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
@@ -698,6 +698,78 @@ footer { margin-top: 32px; color: var(--muted); font-size: 12.5px; text-align: c
     max-width: 100% !important;
   }
 }
+
+/* === ESTILOS V5.0: FOLIOS, PAGOS, ESCALAS POR ÁREA Y VISOR DICOM === */
+.folio-badge {
+  display: inline-block;
+  background: #f1f5f9;
+  border: 1.5px solid var(--accent);
+  color: var(--accent-dark);
+  font-family: monospace;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 8px;
+  margin-bottom: 4px;
+}
+.pay-pill-pagado { background: var(--ok-bg); color: var(--ok); }
+.pay-pill-abono { background: var(--warn-bg); color: var(--warn); }
+.pay-pill-pendiente { background: var(--danger-bg); color: var(--danger); }
+
+.calc-cat-bar {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+.calc-cat-btn {
+  border: 1.5px solid var(--line);
+  background: var(--surface2);
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 7px 14px;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.calc-cat-btn.active {
+  background: var(--accent);
+  color: #ffffff;
+  border-color: var(--accent);
+}
+.calc-card[data-hidden="true"] { display: none; }
+
+/* Visor DICOM / Imágenes Médicas */
+.dicom-viewer-box {
+  background: #090d16;
+  border-radius: 14px;
+  padding: 14px;
+  color: #e2e8f0;
+  margin-top: 12px;
+}
+.dicom-canvas-wrap {
+  width: 100%;
+  max-height: 440px;
+  overflow: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #000000;
+  border-radius: 10px;
+  border: 1px solid #1e293b;
+  min-height: 220px;
+}
+.dicom-controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+  font-size: 12px;
+}
+.dicom-controls label { color: #cbd5e1; margin-bottom: 2px; }
+
 </style>
 </head>
 <body>
@@ -706,7 +778,7 @@ footer { margin-top: 32px; color: var(--muted); font-size: 12.5px; text-align: c
   <div class="utility-bar">
     <div class="status-pill">
       <span class="status-dot"></span>
-      <span>Consultorio Pro v4 · Guardado automático local</span>
+      <span>Consultorio Pro v5 · Guardado automático local</span>
     </div>
     <div class="utility-actions">
       <button class="btn btn-secondary btn-sm" type="button" id="openMembreteBtn">🪪 Membrete y QR</button>
@@ -731,7 +803,7 @@ footer { margin-top: 32px; color: var(--muted); font-size: 12.5px; text-align: c
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M2 12h20"/></svg>
         <span id="heroClinicBadge">Consultorio Médico · Expediente Clínico Electrónico</span>
       </div>
-      <h1 id="heroTitle">Consultorio Médico Pro v4</h1>
+      <h1 id="heroTitle">Consultorio Médico Pro v5</h1>
       <p class="lead">Recetas inteligentes con alertas de alergias cruzadas e interacciones, esquemas personalizables, expediente longitudinal, paraclínicos, gasometría y calculadoras clínicas.</p>
       <div class="hero-stats">
         <div class="stat-box"><strong id="statConsultas">0</strong><span>Consultas</span></div>
@@ -831,7 +903,16 @@ footer { margin-top: 32px; color: var(--muted); font-size: 12.5px; text-align: c
       <div class="grid grid3">
         <div class="field"><label for="rDiagnostico">Diagnóstico clínico</label><input id="rDiagnostico" placeholder="Ej. Faringoamigdalitis aguda"></div>
         <div class="field"><label for="rAlergias">Alergias conocidas (activa detector cruzado)</label><input id="rAlergias" placeholder="Ej. Negadas / Penicilina / AINE"></div>
-        <div class="field"><label for="rHonorarios">Honorarios consulta ($ MXN, opcional)</label><input id="rHonorarios" type="number" min="0" step="10" placeholder="Ej. 500"></div>
+        <div class="field"><label for="rHonorarios">Honorarios ($ MXN) y Estado</label>
+          <div style="display:flex;gap:6px">
+            <input id="rHonorarios" type="number" min="0" step="10" placeholder="500" style="width:55%">
+            <select id="rEstadoPago" style="width:45%">
+              <option value="Pagado">Pagado</option>
+              <option value="Pendiente">Pendiente</option>
+              <option value="Abono">Abono</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       <!-- Signos vitales opcionales -->
@@ -889,6 +970,7 @@ footer { margin-top: 32px; color: var(--muted); font-size: 12.5px; text-align: c
       <button type="button" class="subtab-btn active" data-sub="subBitacoraList">📋 Bitácora General y Registro</button>
       <button type="button" class="subtab-btn" data-sub="subExpedienteTimeline">📈 Expediente Longitudinal por Paciente</button>
       <button type="button" class="subtab-btn" data-sub="subAgendaCitas">📅 Próximas Citas y WhatsApp</button>
+      <button type="button" class="subtab-btn" data-sub="subVisorDicom">🩻 Visor DICOM y Placas</button>
     </div>
 
     <!-- SUBVISTA A: BITÁCORA GENERAL -->
@@ -904,7 +986,16 @@ footer { margin-top: 32px; color: var(--muted); font-size: 12.5px; text-align: c
           <div class="field"><label>Teléfono WhatsApp (10 dígitos)</label><input id="pTel" type="tel" placeholder="Ej. 2221234567"></div>
           <div class="field"><label>Motivo de consulta</label><input id="pMotivo" placeholder="Ej. Odinofagia y fiebre"></div>
           <div class="field"><label>Diagnóstico</label><input id="pDx" placeholder="Diagnóstico principal"></div>
-          <div class="field"><label>Honorarios ($ MXN)</label><input id="pCosto" type="number" min="0" step="10" placeholder="Ej. 500"></div>
+          <div class="field"><label>Honorarios ($ MXN) y Pago</label>
+          <div style="display:flex;gap:6px">
+            <input id="pCosto" type="number" min="0" step="10" placeholder="500" style="width:55%">
+            <select id="pEstadoPago" style="width:45%">
+              <option value="Pagado">Pagado</option>
+              <option value="Pendiente">Pendiente</option>
+              <option value="Abono">Abono</option>
+            </select>
+          </div>
+        </div>
         </div>
         <div class="grid grid4">
           <div class="field"><label>Peso (kg, para gráfica)</label><input id="pPeso" type="number" step="0.1" placeholder="70"></div>
@@ -942,6 +1033,40 @@ footer { margin-top: 32px; color: var(--muted); font-size: 12.5px; text-align: c
     <div id="subAgendaCitas" class="subview">
       <p class="small" style="margin-bottom:12px">Pacientes con fecha de seguimiento programada. Haz clic en <strong>Enviar WhatsApp</strong> para abrir el recordatorio redactado automáticamente.</p>
       <div class="list" id="listaCitasProximas"></div>
+    </div>
+
+    <!-- SUBVISTA D: VISOR DICOM Y PLACAS MÉDICAS -->
+    <div id="subVisorDicom" class="subview">
+      <div class="grid grid2">
+        <div class="field">
+          <label>Cargar estudio médico (.dcm DICOM sin comprimir, JPG o PNG)</label>
+          <input type="file" id="dicomFileInput" accept=".dcm,image/*">
+        </div>
+        <div class="field">
+          <label>Vincular nota del estudio al paciente (opcional)</label>
+          <div style="display:flex;gap:8px">
+            <input id="dicomNotePac" placeholder="Nombre del paciente">
+            <button type="button" class="btn btn-primary btn-sm" id="saveDicomNoteBtn">💾 Guardar hallazgo</button>
+          </div>
+        </div>
+      </div>
+      <div class="dicom-viewer-box">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px">
+          <span id="dicomMetaInfo" style="font-size:12px;color:#38bdf8;font-family:monospace">Sin estudio cargado · Listo para .dcm / imagen</span>
+          <div style="display:flex;gap:6px">
+            <button type="button" class="btn btn-secondary btn-sm" id="dicomInvertBtn">🌗 Invertir escala</button>
+            <button type="button" class="btn btn-secondary btn-sm" id="dicomResetBtn">🔄 Restablecer</button>
+          </div>
+        </div>
+        <div class="dicom-canvas-wrap">
+          <canvas id="dicomCanvas" width="400" height="250"></canvas>
+        </div>
+        <div class="dicom-controls">
+          <div><label>Zoom (<span id="dcmZoomVal">100</span>%)</label><input type="range" id="dcmZoom" min="30" max="250" value="100"></div>
+          <div><label>Brillo / Ventana (<span id="dcmBrightVal">100</span>%)</label><input type="range" id="dcmBright" min="30" max="220" value="100"></div>
+          <div><label>Contraste (<span id="dcmContVal">100</span>%)</label><input type="range" id="dcmCont" min="30" max="250" value="100"></div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -1157,6 +1282,14 @@ footer { margin-top: 32px; color: var(--muted); font-size: 12.5px; text-align: c
       </div>
     </div>
 
+    <div class="calc-cat-bar" id="calcCatBar">
+      <button type="button" class="calc-cat-btn active" data-cat="all">Todas (17)</button>
+      <button type="button" class="calc-cat-btn" data-cat="urgencias">🚨 Urgencias / Neuro</button>
+      <button type="button" class="calc-cat-btn" data-cat="nefro">🧪 Nefro / Metabólico</button>
+      <button type="button" class="calc-cat-btn" data-cat="cardio">🫀 Cardio / Neumo</button>
+      <button type="button" class="calc-cat-btn" data-cat="orl_ped">👂 ORL / Pediatría / Gine</button>
+    </div>
+
     <div class="calc-grid">
       <!-- 1. GASOMETRÍA ARTERIAL -->
       <div class="card">
@@ -1348,6 +1481,41 @@ footer { margin-top: 32px; color: var(--muted); font-size: 12.5px; text-align: c
         </div>
         <p class="result" id="findriscResult">FINDRISC: 0 pts — Riesgo bajo (1 de cada 100 desarrollará DM2 en 10 años).</p>
       </div>
+
+      <!-- 15. qSOFA (SEPSIS) -->
+      <div class="card calc-card" data-cat="urgencias">
+        <h3>Escala qSOFA — Tamizaje rápido de Sepsis</h3>
+        <div class="checks" style="margin-top:10px">
+          <label><input type="checkbox" class="qsofa" value="1"> <span>Frecuencia respiratoria ≥ 22 rpm (+1)</span></label>
+          <label><input type="checkbox" class="qsofa" value="1"> <span>Alteración del estado mental / Glasgow &lt; 15 (+1)</span></label>
+          <label><input type="checkbox" class="qsofa" value="1"> <span>Presión arterial sistólica ≤ 100 mmHg (+1)</span></label>
+        </div>
+        <p class="result" id="qsofaResult">qSOFA: 0/3 — Bajo riesgo de sepsis; vigilar evolución clínica.</p>
+      </div>
+
+      <!-- 16. COCKCROFT-GAULT -->
+      <div class="card calc-card" data-cat="nefro">
+        <h3>Depuración de Creatinina (Cockcroft-Gault)</h3>
+        <div class="grid grid2" style="margin-top:10px">
+          <div class="field"><label>Edad (años)</label><input id="cgEdad" type="number" placeholder="55"></div>
+          <div class="field"><label>Peso (kg)</label><input id="cgPeso" type="number" step="0.1" placeholder="72"></div>
+          <div class="field" style="margin:0"><label>Creatinina (mg/dL)</label><input id="cgCr" type="number" step="0.01" placeholder="1.1"></div>
+          <div class="field" style="margin:0"><label>Sexo</label><select id="cgSexo"><option value="1">Masculino</option><option value="0.85">Femenino (×0.85)</option></select></div>
+        </div>
+        <p class="result" id="cgResult">CrCl: captura edad, peso y creatinina para ajuste de fármacos.</p>
+      </div>
+
+      <!-- 17. DOSIS PONDERAL PEDIÁTRICA LIBRE -->
+      <div class="card calc-card" data-cat="orl_ped">
+        <h3>Calculadora Ponderal Libre (mg/kg/día → mL)</h3>
+        <div class="grid grid2" style="margin-top:10px">
+          <div class="field"><label>Peso (kg)</label><input id="freePeso" type="number" step="0.1" placeholder="15"></div>
+          <div class="field"><label>Dosis (mg/kg/día)</label><input id="freeMgKg" type="number" step="0.1" placeholder="40"></div>
+          <div class="field" style="margin:0"><label>Tomas al día</label><select id="freeTomas"><option value="3">Cada 8 h (3 tomas)</option><option value="2">Cada 12 h (2 tomas)</option><option value="4">Cada 6 h (4 tomas)</option><option value="1">Cada 24 h (1 toma)</option></select></div>
+          <div class="field" style="margin:0"><label>Concentración (mg en 5 mL)</label><input id="freeConc" type="number" step="1" placeholder="250"></div>
+        </div>
+        <p class="result" id="freePedResult">Captura peso, mg/kg/día y concentración para obtener los mL por toma.</p>
+      </div>
     </div>
 
     <h3 style="margin:24px 0 10px">Guías y recursos oficiales</h3>
@@ -1457,7 +1625,7 @@ footer { margin-top: 32px; color: var(--muted); font-size: 12.5px; text-align: c
     <p class="small">Hexavalente acelular protege contra: Difteria, Tosferina, Tétanos, Poliomielitis, Hepatitis B y <em>Haemophilus influenzae</em> tipo b.</p>
   </section>
 
-  <footer>Consultorio Médico Pro v4 · Almacenamiento local privado · Compatible con impresión Carta y Media Carta.</footer>
+  <footer>Consultorio Médico Pro v5 · Almacenamiento local privado · Compatible con impresión Carta y Media Carta.</footer>
 </div>
 
 <!-- Notificación Toast no intrusiva -->
@@ -1479,6 +1647,7 @@ footer { margin-top: 32px; color: var(--muted); font-size: 12.5px; text-align: c
       </div>
     </div>
     <div class="rx-meta">
+      <div class="folio-badge" id="prFolioBadge" style="display:none">FOLIO: REC-0001</div><br>
       <strong id="prDocTitle" style="font-size:14px;color:var(--accent)">RECETA MÉDICA</strong><br>
       <span id="prFecha"></span>
     </div>
@@ -1971,7 +2140,7 @@ footer { margin-top: 32px; color: var(--muted); font-size: 12.5px; text-align: c
   function applyMembreteUI() {
     const m = state.membrete;
     document.getElementById("heroClinicBadge").textContent = `${m.clinica} · ${m.cedula}`;
-    document.getElementById("heroTitle").textContent = m.clinica || "Consultorio Médico Pro v4";
+    document.getElementById("heroTitle").textContent = m.clinica || "Consultorio Médico Pro v5";
     document.getElementById("prDocName").textContent = m.nombre;
     document.getElementById("prDocSub").textContent = `${m.titulo} · ${m.cedula}`;
     document.getElementById("prDocContact").textContent = `${m.clinica} · ${m.direccion} · ${m.tel}`;
@@ -2566,6 +2735,7 @@ footer { margin-top: 32px; color: var(--muted); font-size: 12.5px; text-align: c
       peso: document.getElementById("rvPeso").value.trim(),
       ta: document.getElementById("rvTa").value.trim(),
       costo: document.getElementById("rHonorarios").value.trim(),
+      estadoPago: document.getElementById("rEstadoPago").value,
       cita: ""
     });
     saveState();
@@ -2607,7 +2777,7 @@ footer { margin-top: 32px; color: var(--muted); font-size: 12.5px; text-align: c
             <strong style="font-size:16px">${escapeHtml(c.nombre)}</strong>
             <span class="pill" style="margin-left:6px">${escapeHtml(c.fecha)}</span>
             <span class="pill" style="margin-left:4px">${previas} visita(s)</span>
-            ${c.costo ? `<span class="pill" style="margin-left:4px">$${escapeHtml(c.costo)}</span>` : ""}
+            ${c.costo ? `<span class="pill pay-pill-${(c.estadoPago || "Pagado").toLowerCase()}" style="margin-left:4px">$${escapeHtml(c.costo)} · ${escapeHtml(c.estadoPago || "Pagado")}</span>` : ""}
           </div>
           <div style="display:flex;gap:6px;flex-wrap:wrap">
             <button type="button" class="btn btn-secondary btn-sm view-tl-btn">📈 Expediente</button>
@@ -2662,6 +2832,7 @@ footer { margin-top: 32px; color: var(--muted); font-size: 12.5px; text-align: c
       motivo: document.getElementById("pMotivo").value.trim(),
       dx: document.getElementById("pDx").value.trim(),
       costo: document.getElementById("pCosto").value.trim(),
+      estadoPago: document.getElementById("pEstadoPago").value,
       peso: document.getElementById("pPeso").value.trim(),
       ta: document.getElementById("pTa").value.trim(),
       tx: document.getElementById("pTx").value.trim(),
@@ -2938,6 +3109,7 @@ footer { margin-top: 32px; color: var(--muted); font-size: 12.5px; text-align: c
   document.getElementById("printHcBtn").addEventListener("click", () => {
     applyMembreteUI();
     document.getElementById("prDocTitle").textContent = document.getElementById("hcTipoDoc").value;
+    const fb = document.getElementById("prFolioBadge"); if (fb) fb.style.display = "none";
     document.getElementById("prFooterNote").innerHTML = "Documento clínico confidencial conforme a la NOM-004-SSA3-2012.";
     document.getElementById("prFecha").textContent = `Fecha: ${new Date().toISOString().slice(0,10)}`;
 
@@ -2983,6 +3155,7 @@ footer { margin-top: 32px; color: var(--muted); font-size: 12.5px; text-align: c
   document.getElementById("printLabBtn").addEventListener("click", () => {
     applyMembreteUI();
     document.getElementById("prDocTitle").textContent = "SOLICITUD DE ESTUDIOS";
+    const fb = document.getElementById("prFolioBadge"); if (fb) fb.style.display = "none";
     document.getElementById("prFecha").textContent = `Fecha: ${new Date().toISOString().slice(0,10)}`;
     document.getElementById("prFooterNote").innerHTML = "Favor de presentar esta orden en el laboratorio o gabinete de su elección.";
 
@@ -3035,6 +3208,7 @@ footer { margin-top: 32px; color: var(--muted); font-size: 12.5px; text-align: c
     applyMembreteUI();
     const isJust = document.getElementById("certTipo").value === "justificante";
     document.getElementById("prDocTitle").textContent = isJust ? "JUSTIFICANTE MÉDICO" : "CERTIFICADO MÉDICO";
+    const fb = document.getElementById("prFolioBadge"); if (fb) fb.style.display = "none";
     document.getElementById("prFecha").textContent = `Fecha: ${new Date().toISOString().slice(0,10)}`;
     document.getElementById("prFooterNote").innerHTML = "Válido únicamente con firma autógrafa y sello del médico.";
     const dest = document.getElementById("certDestino").value.trim() || "A QUIEN CORRESPONDA:";
@@ -3068,6 +3242,7 @@ footer { margin-top: 32px; color: var(--muted); font-size: 12.5px; text-align: c
     applyMembreteUI();
     const isRef = document.getElementById("legalTipo").value === "referencia";
     document.getElementById("prDocTitle").textContent = isRef ? "HOJA DE REFERENCIA" : "CONSENTIMIENTO INFORMADO";
+    const fb = document.getElementById("prFolioBadge"); if (fb) fb.style.display = "none";
     document.getElementById("prFecha").textContent = `Fecha: ${new Date().toISOString().slice(0,10)}`;
     document.getElementById("prFooterNote").innerHTML = "Integrado al expediente clínico conforme a la NOM-004-SSA3-2012.";
 
@@ -3469,6 +3644,188 @@ footer { margin-top: 32px; color: var(--muted); font-size: 12.5px; text-align: c
     switchPanel("receta");
   });
 
+
+  // === LÓGICA V5.0: FOLIOS + QR VERIFICACIÓN + PAGOS + ESCALAS + VISOR DICOM ===
+  if (!state.rxFolioCounter) state.rxFolioCounter = 1;
+  function formatFolio(num) { return "REC-" + String(num).padStart(4, "0"); }
+
+  const cardCats = [
+    "urgencias", "nefro", "nefro", "nefro", "nefro", "orl_ped",
+    "urgencias", "urgencias", "cardio", "urgencias", "cardio", "orl_ped", "cardio", "nefro"
+  ];
+  document.querySelectorAll("#escalas .calc-grid > .card").forEach((card, i) => {
+    card.classList.add("calc-card");
+    if (!card.dataset.cat && cardCats[i]) card.dataset.cat = cardCats[i];
+  });
+
+  document.querySelectorAll(".calc-cat-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".calc-cat-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      const cat = btn.dataset.cat;
+      document.querySelectorAll(".calc-card").forEach(c => {
+        c.dataset.hidden = (cat !== "all" && c.dataset.cat !== cat) ? "true" : "false";
+      });
+    });
+  });
+
+  document.querySelectorAll(".qsofa").forEach(cb => cb.addEventListener("change", () => {
+    let t = 0; document.querySelectorAll(".qsofa:checked").forEach(x => t += parseInt(x.value));
+    document.getElementById("qsofaResult").innerHTML = t >= 2
+      ? `qSOFA: <strong>${t}/3 pts</strong> — ⚠️ ALTO RIESGO de sepsis / disfunción orgánica. Evaluar SOFA y lactato.`
+      : `qSOFA: <strong>${t}/3 pts</strong> — Riesgo bajo; mantener vigilancia clínica.`;
+  }));
+
+  function calcCockcroft() {
+    const e = parseFloat(document.getElementById("cgEdad").value);
+    const p = parseFloat(document.getElementById("cgPeso").value);
+    const cr = parseFloat(document.getElementById("cgCr").value);
+    const f = parseFloat(document.getElementById("cgSexo").value);
+    const out = document.getElementById("cgResult");
+    if (e > 0 && p > 0 && cr > 0) {
+      const crcl = ((140 - e) * p * f) / (72 * cr);
+      out.innerHTML = `Depuración CrCl: <strong>${crcl.toFixed(1)} mL/min</strong> (${crcl < 50 ? "Requiere ajuste renal de fármacos" : "Función conservada para dosificación estándar"})`;
+    }
+  }
+  ["cgEdad", "cgPeso", "cgCr", "cgSexo"].forEach(id => document.getElementById(id).addEventListener("input", calcCockcroft));
+
+  function calcFreePed() {
+    const p = parseFloat(document.getElementById("freePeso").value);
+    const mgkg = parseFloat(document.getElementById("freeMgKg").value);
+    const tomas = parseInt(document.getElementById("freeTomas").value);
+    const conc = parseFloat(document.getElementById("freeConc").value);
+    const out = document.getElementById("freePedResult");
+    if (p > 0 && mgkg > 0 && conc > 0) {
+      const mgDia = p * mgkg;
+      const mgToma = mgDia / tomas;
+      const mlToma = (mgToma * 5) / conc;
+      out.innerHTML = `Administrar <strong>${mlToma.toFixed(1)} mL</strong> por toma (${mgToma.toFixed(0)} mg c/${24/tomas}h · Total: ${mgDia.toFixed(0)} mg/día).`;
+    }
+  }
+  ["freePeso", "freeMgKg", "freeTomas", "freeConc"].forEach(id => document.getElementById(id).addEventListener("input", calcFreePed));
+
+  const origRenderRx = renderRxPrintView;
+  renderRxPrintView = function() {
+    const sheet = origRenderRx();
+    const folio = formatFolio(state.rxFolioCounter);
+    const badge = document.getElementById("prFolioBadge");
+    if (badge) { badge.style.display = "inline-block"; badge.textContent = "FOLIO: " + folio; }
+    const pac = document.getElementById("rPaciente").value.trim() || "Paciente";
+    const fecha = document.getElementById("rFecha").value || new Date().toISOString().slice(0,10);
+    const qrPayload = `${folio}|${pac.slice(0,18)}|${fecha}|${state.membrete.cedula}`;
+    const qrBox = document.getElementById("prQrContainer");
+    qrBox.innerHTML = generateQrSvg(qrPayload, 68);
+    qrBox.style.display = "block";
+    return sheet;
+  };
+
+  document.getElementById("printDirectBtn").addEventListener("click", () => {
+    state.rxFolioCounter = (state.rxFolioCounter || 1) + 1;
+    saveState();
+  });
+
+  const dcmCanvas = document.getElementById("dicomCanvas");
+  const dcmCtx = dcmCanvas.getContext("2d");
+  let dcmSourceCanvas = document.createElement("canvas");
+  let dcmInverted = false;
+
+  function renderDicomCanvas() {
+    const zoom = parseInt(document.getElementById("dcmZoom").value) / 100;
+    const bright = parseInt(document.getElementById("dcmBright").value);
+    const cont = parseInt(document.getElementById("dcmCont").value);
+    document.getElementById("dcmZoomVal").textContent = Math.round(zoom * 100);
+    document.getElementById("dcmBrightVal").textContent = bright;
+    document.getElementById("dcmContVal").textContent = cont;
+
+    dcmCanvas.width = Math.max(1, Math.round(dcmSourceCanvas.width * zoom));
+    dcmCanvas.height = Math.max(1, Math.round(dcmSourceCanvas.height * zoom));
+    dcmCtx.filter = `brightness(${bright}%) contrast(${cont}%) invert(${dcmInverted ? 100 : 0}%)`;
+    dcmCtx.drawImage(dcmSourceCanvas, 0, 0, dcmCanvas.width, dcmCanvas.height);
+  }
+
+  ["dcmZoom", "dcmBright", "dcmCont"].forEach(id => document.getElementById(id).addEventListener("input", renderDicomCanvas));
+  document.getElementById("dicomInvertBtn").addEventListener("click", () => { dcmInverted = !dcmInverted; renderDicomCanvas(); });
+  document.getElementById("dicomResetBtn").addEventListener("click", () => {
+    document.getElementById("dcmZoom").value = 100;
+    document.getElementById("dcmBright").value = 100;
+    document.getElementById("dcmCont").value = 100;
+    dcmInverted = false;
+    renderDicomCanvas();
+  });
+
+  document.getElementById("dicomFileInput").addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.name.toLowerCase().endsWith(".dcm")) {
+      const reader = new FileReader();
+      reader.onload = function(ev) {
+        const buf = ev.target.result;
+        const view = new DataView(buf);
+        let rows = 512, cols = 512, pixelOffset = -1;
+        for (let i = 132; i < view.byteLength - 12; i += 2) {
+          const g = view.getUint16(i, true), el = view.getUint16(i + 2, true);
+          if (g === 0x0028 && el === 0x0010) rows = view.getUint16(i + 8, true);
+          if (g === 0x0028 && el === 0x0011) cols = view.getUint16(i + 8, true);
+          if (g === 0x7FE0 && el === 0x0010) { pixelOffset = i + 12; break; }
+        }
+        if (pixelOffset > 0 && rows > 0 && cols > 0) {
+          dcmSourceCanvas.width = cols;
+          dcmSourceCanvas.height = rows;
+          const sCtx = dcmSourceCanvas.getContext("2d");
+          const imgData = sCtx.createImageData(cols, rows);
+          const totalPx = Math.min(rows * cols, Math.floor((view.byteLength - pixelOffset) / 2));
+          let minV = 65535, maxV = 0;
+          for (let p = 0; p < totalPx; p++) {
+            const v = view.getUint16(pixelOffset + p * 2, true);
+            if (v < minV) minV = v;
+            if (v > maxV) maxV = v;
+          }
+          const span = (maxV - minV) || 1;
+          for (let p = 0; p < totalPx; p++) {
+            const val = Math.round(((view.getUint16(pixelOffset + p * 2, true) - minV) / span) * 255);
+            imgData.data[p * 4] = val;
+            imgData.data[p * 4 + 1] = val;
+            imgData.data[p * 4 + 2] = val;
+            imgData.data[p * 4 + 3] = 255;
+          }
+          sCtx.putImageData(imgData, 0, 0);
+          document.getElementById("dicomMetaInfo").textContent = `DICOM cargado: ${file.name} (${cols}×${rows} px)`;
+          renderDicomCanvas();
+        } else {
+          showToast("⚠️ DICOM comprimido (JPEG2000). Ábrelo en MicroDicom/Horos o expórtalo a JPG/PNG.");
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    } else {
+      const img = new Image();
+      img.onload = function() {
+        dcmSourceCanvas.width = img.width;
+        dcmSourceCanvas.height = img.height;
+        dcmSourceCanvas.getContext("2d").drawImage(img, 0, 0);
+        document.getElementById("dicomMetaInfo").textContent = `Imagen clínica: ${file.name} (${img.width}×${img.height} px)`;
+        renderDicomCanvas();
+      };
+      img.src = URL.createObjectURL(file);
+    }
+  });
+
+  document.getElementById("saveDicomNoteBtn").addEventListener("click", () => {
+    const pac = document.getElementById("dicomNotePac").value.trim();
+    const meta = document.getElementById("dicomMetaInfo").textContent;
+    if (!pac) { showToast("⚠️ Escribe el nombre del paciente."); return; }
+    state.consultas.push({
+      id: Date.now(),
+      fecha: new Date().toISOString().slice(0, 10),
+      nombre: pac,
+      motivo: "Revisión de Estudio de Imagen",
+      dx: meta,
+      tx: "Estudio revisado en consultorio",
+      costo: ""
+    });
+    saveState(); renderPacientes(); refreshTimelineSelect();
+    showToast(`💾 Nota de estudio vinculada a ${pac}.`);
+  });
+
   function escapeHtml(str) {
     return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
@@ -3479,6 +3836,7 @@ footer { margin-top: 32px; color: var(--muted); font-size: 12.5px; text-align: c
   const SUPABASE_URL = "https://kfctvhjxdsjnlexwbddd.supabase.co";
   const SUPABASE_KEY = "sb_publishable_FVSUjp37h5kBYtpFkTTdFg_YP1XanoZ";
   const RECORD_ID = "consultorio_elian_principal";
+  const APP_KEY = "consultorio_medico_pro_v4";
   const HEADERS = {
     "apikey": SUPABASE_KEY,
     "Authorization": "Bearer " + SUPABASE_KEY,
@@ -3490,17 +3848,13 @@ footer { margin-top: 32px; color: var(--muted); font-size: 12.5px; text-align: c
   let lastHash = "";
 
   const badge = document.createElement("div");
-  badge.style.cssText = "position:fixed;bottom:10px;right:10px;z-index:9999;background:#0f766e;color:#fff;font-size:11px;padding:4px 10px;border-radius:999px;opacity:0.85;pointer-events:none;font-family:sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.2);";
+  badge.style.cssText = "position:fixed;bottom:10px;right:10px;z-index:9999;background:#0f766e;color:#fff;font-size:11px;padding:4px 10px;border-radius:999px;opacity:0.9;pointer-events:none;font-family:sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.2);";
   badge.textContent = "☁️ Conectando...";
   document.body.appendChild(badge);
 
   function getLocalDump() {
-    const dump = {};
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i);
-      if (k !== "__sync_ts") dump[k] = localStorage.getItem(k);
-    }
-    return dump;
+    const val = localStorage.getItem(APP_KEY);
+    return val ? { [APP_KEY]: val } : {};
   }
 
   async function pullFromCloud() {
@@ -3508,20 +3862,24 @@ footer { margin-top: 32px; color: var(--muted); font-size: 12.5px; text-align: c
     try {
       const res = await fetch(`${SUPABASE_URL}/rest/v1/consultorio_sync?id=eq.${RECORD_ID}&select=datos,updated_at`, { headers: HEADERS });
       const rows = await res.json();
-      if (Array.isArray(rows) && rows.length > 0 && rows[0].datos) {
-        const cloudDump = rows[0].datos;
-        const cloudHash = JSON.stringify(cloudDump);
-        const localHash = JSON.stringify(getLocalDump());
-        if (cloudHash !== localHash && Object.keys(cloudDump).length > 0) {
+      if (Array.isArray(rows) && rows.length > 0 && rows[0].datos && rows[0].datos[APP_KEY]) {
+        const cloudVal = rows[0].datos[APP_KEY];
+        const localVal = localStorage.getItem(APP_KEY) || "";
+        if (cloudVal !== localVal) {
           syncing = true;
-          Object.keys(cloudDump).forEach(k => localStorage.setItem(k, cloudDump[k]));
-          lastHash = cloudHash;
-          badge.textContent = "☁️ Datos actualizados";
-          setTimeout(() => location.reload(), 600);
+          localStorage.setItem(APP_KEY, cloudVal);
+          lastHash = JSON.stringify({ [APP_KEY]: cloudVal });
+          syncing = false;
+          badge.textContent = "☁️ Datos sincronizados";
+          if (!sessionStorage.getItem("__reloaded_once")) {
+            sessionStorage.setItem("__reloaded_once", "1");
+            location.reload();
+          }
           return;
         }
-        lastHash = localHash;
+        lastHash = JSON.stringify({ [APP_KEY]: localVal });
       }
+      sessionStorage.removeItem("__reloaded_once");
       badge.textContent = "☁️ Sincronizado";
     } catch (e) {
       badge.textContent = "⚠️ Sin conexión nube";
@@ -3532,7 +3890,7 @@ footer { margin-top: 32px; color: var(--muted); font-size: 12.5px; text-align: c
     if (syncing || !navigator.onLine) return;
     const dump = getLocalDump();
     const currentHash = JSON.stringify(dump);
-    if (currentHash === lastHash || Object.keys(dump).length === 0) return;
+    if (currentHash === lastHash || !dump[APP_KEY]) return;
     badge.textContent = "☁️ Guardando...";
     try {
       const res = await fetch(`${SUPABASE_URL}/rest/v1/consultorio_sync`, {
@@ -3554,7 +3912,7 @@ footer { margin-top: 32px; color: var(--muted); font-size: 12.5px; text-align: c
   const origSetItem = localStorage.setItem;
   localStorage.setItem = function(k, v) {
     origSetItem.apply(this, arguments);
-    if (!syncing && k !== "__sync_ts") {
+    if (!syncing && k === APP_KEY) {
       clearTimeout(window.__syncTimer);
       window.__syncTimer = setTimeout(pushToCloud, 1500);
     }
@@ -3563,9 +3921,6 @@ footer { margin-top: 32px; color: var(--muted); font-size: 12.5px; text-align: c
   window.addEventListener("load", async () => {
     await pullFromCloud();
     setTimeout(pushToCloud, 2500);
-  });
-  document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible") pullFromCloud();
   });
 })();
 </script>
