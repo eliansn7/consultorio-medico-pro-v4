@@ -3474,5 +3474,100 @@ footer { margin-top: 32px; color: var(--muted); font-size: 12.5px; text-align: c
   }
 })();
 </script>
+<script>
+(function() {
+  const SUPABASE_URL = "https://kfctvhjxdsjnlexwbddd.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_FVSUjp37h5kBYtpFkTTdFg_YP1XanoZ";
+  const RECORD_ID = "consultorio_elian_principal";
+  const HEADERS = {
+    "apikey": SUPABASE_KEY,
+    "Authorization": "Bearer " + SUPABASE_KEY,
+    "Content-Type": "application/json",
+    "Prefer": "resolution=merge-duplicates"
+  };
+
+  let syncing = false;
+  let lastHash = "";
+
+  const badge = document.createElement("div");
+  badge.style.cssText = "position:fixed;bottom:10px;right:10px;z-index:9999;background:#0f766e;color:#fff;font-size:11px;padding:4px 10px;border-radius:999px;opacity:0.85;pointer-events:none;font-family:sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.2);";
+  badge.textContent = "☁️ Conectando...";
+  document.body.appendChild(badge);
+
+  function getLocalDump() {
+    const dump = {};
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k !== "__sync_ts") dump[k] = localStorage.getItem(k);
+    }
+    return dump;
+  }
+
+  async function pullFromCloud() {
+    if (!navigator.onLine) { badge.textContent = "📴 Modo offline"; return; }
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/consultorio_sync?id=eq.${RECORD_ID}&select=datos,updated_at`, { headers: HEADERS });
+      const rows = await res.json();
+      if (Array.isArray(rows) && rows.length > 0 && rows[0].datos) {
+        const cloudDump = rows[0].datos;
+        const cloudHash = JSON.stringify(cloudDump);
+        const localHash = JSON.stringify(getLocalDump());
+        if (cloudHash !== localHash && Object.keys(cloudDump).length > 0) {
+          syncing = true;
+          Object.keys(cloudDump).forEach(k => localStorage.setItem(k, cloudDump[k]));
+          lastHash = cloudHash;
+          badge.textContent = "☁️ Datos actualizados";
+          setTimeout(() => location.reload(), 600);
+          return;
+        }
+        lastHash = localHash;
+      }
+      badge.textContent = "☁️ Sincronizado";
+    } catch (e) {
+      badge.textContent = "⚠️ Sin conexión nube";
+    }
+  }
+
+  async function pushToCloud() {
+    if (syncing || !navigator.onLine) return;
+    const dump = getLocalDump();
+    const currentHash = JSON.stringify(dump);
+    if (currentHash === lastHash || Object.keys(dump).length === 0) return;
+    badge.textContent = "☁️ Guardando...";
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/consultorio_sync`, {
+        method: "POST",
+        headers: HEADERS,
+        body: JSON.stringify({ id: RECORD_ID, datos: dump, updated_at: new Date().toISOString() })
+      });
+      if (res.ok) {
+        lastHash = currentHash;
+        badge.textContent = "☁️ Sincronizado";
+      } else {
+        badge.textContent = "⚠️ Error al subir";
+      }
+    } catch (e) {
+      badge.textContent = "📴 Guardado local";
+    }
+  }
+
+  const origSetItem = localStorage.setItem;
+  localStorage.setItem = function(k, v) {
+    origSetItem.apply(this, arguments);
+    if (!syncing && k !== "__sync_ts") {
+      clearTimeout(window.__syncTimer);
+      window.__syncTimer = setTimeout(pushToCloud, 1500);
+    }
+  };
+
+  window.addEventListener("load", async () => {
+    await pullFromCloud();
+    setTimeout(pushToCloud, 2500);
+  });
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") pullFromCloud();
+  });
+})();
+</script>
 </body>
 </html>
